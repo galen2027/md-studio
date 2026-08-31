@@ -169,6 +169,8 @@ struct Strings {
     search_placeholder: &'static str,
     stat_words: &'static str,
     stat_chars: &'static str,
+    btn_toc: &'static str,
+    toc_title: &'static str,
 }
 
 impl Strings {
@@ -198,6 +200,8 @@ impl Strings {
                 search_placeholder: "搜索",
                 stat_words: "字",
                 stat_chars: "字符",
+                btn_toc: "章节导航 (Cmd/Ctrl+T)",
+                toc_title: "目录",
             },
             Lang::En => Strings {
                 drop_hint: "Drop a .md file here or press Cmd/Ctrl+O to open",
@@ -223,6 +227,8 @@ impl Strings {
                 search_placeholder: "Find",
                 stat_words: "non-space",
                 stat_chars: "chars",
+                btn_toc: "Outline (Cmd/Ctrl+T)",
+                toc_title: "Outline",
             },
         }
     }
@@ -1248,6 +1254,36 @@ body.has-tabs {{ --chrome-top: 50px; }}
 	.missing-actions button {{ min-height: 36px; padding: 0 13px; border: 1px solid #d8d8d8; border-radius: 7px; background: #fff; color: #333; cursor: pointer; font: inherit; }}
 	.missing-actions button:hover {{ background: #f4f4f4; }}
 
+/* Outline / chapter navigation sidebar (left) */
+#toc-panel {{
+  display: none; position: fixed; left: 0; top: var(--chrome-top); bottom: 0;
+  width: 236px; box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain;
+  padding: 12px 8px 24px 14px; border-right: 1px solid #e6e6e6;
+  background: #fafafa; z-index: 90; font-size: 13px; line-height: 1.5;
+}}
+body.toc-open.has-toc #toc-panel {{ display: block; }}
+body.toc-open.has-toc #app {{ max-width: none; padding-left: 260px; }}
+body.toc-open.has-toc #preview {{ max-width: 820px; margin: 0 auto; }}
+body.editing #toc-panel {{ display: none !important; }}
+body.editing.toc-open.has-toc #app {{ padding-left: 0; }}
+#toc-header {{
+  font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: #999; padding: 2px 8px 8px; user-select: none;
+}}
+#toc a.toc-item {{
+  display: block; padding: 3px 8px 3px 10px; border-radius: 6px;
+  color: #444; text-decoration: none; cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}}
+#toc a.toc-item:hover {{ background: rgba(0,0,0,.05); color: #111; }}
+#toc a.toc-item.active {{ color: #0969da; font-weight: 600; }}
+#toc a.toc-item[data-depth="1"] {{ padding-left: 22px; }}
+#toc a.toc-item[data-depth="2"] {{ padding-left: 34px; }}
+#toc a.toc-item[data-depth="3"] {{ padding-left: 46px; }}
+#toc a.toc-item[data-depth="4"] {{ padding-left: 58px; }}
+#toc a.toc-item[data-depth="5"] {{ padding-left: 70px; }}
+.toolbar button#btn-toc.on {{ color: #0969da; }}
+
 /* Floating toolbar (top-right) — hover-reveal, hidden in empty state unless an update exists */
 .toolbar {{
   position: fixed; top: var(--chrome-top); right: 12px;
@@ -1361,6 +1397,12 @@ body.empty .toolbar.has-update button:not(.update-btn) {{ display: none !importa
 	  .missing-file p {{ color: #aaa; }}
 	  .missing-actions button {{ background: #292929; border-color: #444; color: #ddd; }}
 	  .missing-actions button:hover {{ background: #333; }}
+	  #toc-panel {{ background: #232323; border-color: #363636; }}
+	  #toc-header {{ color: #777; }}
+	  #toc a.toc-item {{ color: #bbb; }}
+	  #toc a.toc-item:hover {{ background: rgba(255,255,255,.07); color: #eee; }}
+	  #toc a.toc-item.active {{ color: #6cb6ff; }}
+	  .toolbar button#btn-toc.on {{ color: #6cb6ff; }}
 	}}
 
 /* Source editor textarea — height is auto-grown by JS to match content,
@@ -1387,14 +1429,16 @@ body.editing #btn-print {{ display: none; }}
 }}
 
 @media print {{
-  .toolbar, .tabbar, #editor {{ display: none !important; }}
+  .toolbar, .tabbar, #editor, #toc-panel {{ display: none !important; }}
   #preview {{ display: block !important; }}
   #app {{ max-width: none; padding: 0; }}
+  body.toc-open.has-toc #app {{ padding-left: 0; }}
   #preview .mdp-table-wrap {{ width: auto; margin: 1em 0; transform: none; overflow: visible; }}
 }}
 	</style></head><body class="{body_class}">
 	<div class="tabbar" id="tabbar"><div class="tabs" id="tabs"></div><div class="doc-stats" id="doc-stats" aria-live="polite"></div><button class="tab-open" id="tab-open" type="button" title="{btn_new}" aria-label="{btn_new}">+</button></div>
 	<div class="toolbar">
+	  <button id="btn-toc" title="{btn_toc}" aria-label="{btn_toc}"></button>
 	  <button id="btn-open" title="{btn_open}" aria-label="{btn_open}"></button>
 	  <button id="btn-search" title="{btn_search}" aria-label="{btn_search}"></button>
 	  <button id="btn-toggle" title="{btn_edit}" aria-label="{btn_edit}"></button>
@@ -1416,6 +1460,7 @@ body.editing #btn-print {{ display: none; }}
 	  <button id="find-next" title="Next" aria-label="Next"></button>
 	  <button id="find-close" title="Close" aria-label="Close"></button>
 	</div>
+	<aside id="toc-panel" aria-label="{toc_title}"><div id="toc-header">{toc_title}</div><nav id="toc"></nav></aside>
 	<div id="app">
   <div id="preview">{preview_html}</div>
   <textarea id="editor" spellcheck="false">{raw_md_escaped}</textarea>
@@ -1431,6 +1476,7 @@ body.editing #btn-print {{ display: none; }}
 	  var ICON_UP = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>';
 	  var ICON_DOWN = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
 	  var ICON_CLOSE = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+	  var ICON_TOC = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M4 12h10"/><path d="M4 18h14"/></svg>';
 	  var L_EDIT = '{btn_edit}', L_VIEW = '{btn_preview}';
 
 	  var btnOpen = document.getElementById('btn-open');
@@ -1451,6 +1497,12 @@ body.editing #btn-print {{ display: none; }}
 	  var tabsEl = document.getElementById('tabs');
 	  var docStats = document.getElementById('doc-stats');
 	  var tabOpen = document.getElementById('tab-open');
+	  var btnToc = document.getElementById('btn-toc');
+	  var tocPanel = document.getElementById('toc-panel');
+	  var tocNav = document.getElementById('toc');
+	  var tocActiveLink = null;
+	  var tocSpyScheduled = false;
+	  var TOC_STORAGE_KEY = 'md-preview-toc-open-v1';
 	  var ta = document.getElementById('editor');
 	  var dirty = false;
 	  var activeTabId = 0;
@@ -1480,6 +1532,90 @@ body.editing #btn-print {{ display: none; }}
 	  findPrev.innerHTML = ICON_UP;
 	  findNext.innerHTML = ICON_DOWN;
 	  findClose.innerHTML = ICON_CLOSE;
+	  btnToc.innerHTML = ICON_TOC;
+
+  function loadTocOpen() {{
+    try {{ return localStorage.getItem(TOC_STORAGE_KEY) === '1'; }} catch (_) {{ return false; }}
+  }}
+  function setTocOpen(open, persist) {{
+    document.body.classList.toggle('toc-open', open);
+    btnToc.classList.toggle('on', open);
+    if (persist) {{ try {{ localStorage.setItem(TOC_STORAGE_KEY, open ? '1' : '0'); }} catch (_) {{}} }}
+  }}
+  function buildToc() {{
+    var headings = document.querySelectorAll('#preview h1[id], #preview h2[id], #preview h3[id], #preview h4[id], #preview h5[id], #preview h6[id]');
+    tocNav.textContent = '';
+    tocActiveLink = null;
+    if (!headings.length) {{
+      document.body.classList.remove('has-toc');
+      btnToc.hidden = true;
+      return;
+    }}
+    btnToc.hidden = false;
+    var minLevel = 6;
+    headings.forEach(function(h) {{
+      var lvl = h.tagName.charCodeAt(1) - 48;
+      if (lvl < minLevel) minLevel = lvl;
+    }});
+    var frag = document.createDocumentFragment();
+    headings.forEach(function(h) {{
+      var lvl = h.tagName.charCodeAt(1) - 48;
+      var a = document.createElement('a');
+      a.className = 'toc-item';
+      a.textContent = h.textContent;
+      a.title = h.textContent;
+      a.setAttribute('data-target', h.id);
+      a.setAttribute('data-depth', Math.min(lvl - minLevel, 5));
+      frag.appendChild(a);
+    }});
+    tocNav.appendChild(frag);
+    document.body.classList.add('has-toc');
+    updateTocActive();
+  }}
+  function updateTocActive() {{
+    if (!document.body.classList.contains('has-toc')) return;
+    var links = tocNav.querySelectorAll('.toc-item');
+    if (!links.length) return;
+    var scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    var active = null;
+    for (var i = 0; i < links.length; i++) {{
+      var el = document.getElementById(links[i].getAttribute('data-target'));
+      if (!el) continue;
+      if (el.getBoundingClientRect().top + scrollY <= scrollY + 88) active = links[i];
+      else break;
+    }}
+    if (active === tocActiveLink) return;
+    if (tocActiveLink) tocActiveLink.classList.remove('active');
+    tocActiveLink = active;
+    if (active) {{
+      active.classList.add('active');
+      var panelRect = tocPanel.getBoundingClientRect();
+      var linkRect = active.getBoundingClientRect();
+      if (linkRect.top < panelRect.top + 8 || linkRect.bottom > panelRect.bottom - 8) {{
+        tocPanel.scrollTop += linkRect.top - panelRect.top - panelRect.height / 2;
+      }}
+    }}
+  }}
+  tocNav.addEventListener('click', function(e) {{
+    var link = e.target && e.target.closest ? e.target.closest('.toc-item') : null;
+    if (!link) return;
+    e.preventDefault();
+    var el = document.getElementById(link.getAttribute('data-target'));
+    if (!el) return;
+    var scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    window.scrollTo(0, el.getBoundingClientRect().top + scrollY - 64);
+  }});
+  window.addEventListener('scroll', function() {{
+    if (tocSpyScheduled) return;
+    tocSpyScheduled = true;
+    requestAnimationFrame(function() {{
+      tocSpyScheduled = false;
+      updateTocActive();
+    }});
+  }}, {{ passive: true }});
+  btnToc.addEventListener('click', function() {{
+    setTocOpen(!document.body.classList.contains('toc-open'), true);
+  }});
 
   function inEdit() {{ return document.body.classList.contains('editing'); }}
   function textSegments(text) {{
@@ -1536,6 +1672,8 @@ body.editing #btn-print {{ display: none; }}
   }}
   applyZoom(loadZoomPercent(), false);
   updateDocumentStats(ta.value);
+  setTocOpen(loadTocOpen(), false);
+  buildToc();
   document.addEventListener('contextmenu', function(e) {{
     if (!inEdit() || e.target !== ta) e.preventDefault();
   }});
@@ -1874,6 +2012,12 @@ body.editing #btn-print {{ display: none; }}
       if (inEdit()) leaveEdit(); else enterEdit();
       return;
     }}
+    if ((e.metaKey || e.ctrlKey) && (e.key === 't' || e.key === 'T')) {{
+      if (inEdit()) return;
+      e.preventDefault();
+      setTocOpen(!document.body.classList.contains('toc-open'), true);
+      return;
+    }}
     if ((e.metaKey || e.ctrlKey) && (e.key === 's' || e.key === 'S')) {{
       if (inEdit()) {{ e.preventDefault(); save(); }}
       return;
@@ -1895,6 +2039,7 @@ body.editing #btn-print {{ display: none; }}
       window.__setFeatureFlags(needsMath, needsMermaid);
     }}
     document.getElementById('preview').innerHTML = previewHtml;
+    buildToc();
     (window.requestIdleCallback || function(fn){{ return setTimeout(fn, 0); }})(function() {{
       if (typeof hljs !== 'undefined') hljs.highlightAll();
       if (window.__enhancePreview) window.__enhancePreview();
@@ -1991,6 +2136,7 @@ body.editing #btn-print {{ display: none; }}
 	    hideFind();
 	    window.__setBaseHref('');
 	    document.getElementById('preview').innerHTML = previewHtml;
+	    buildToc();
 	    ta.value = '';
 	    updateDocumentStats('');
 	    setDirty(false);
@@ -2008,6 +2154,7 @@ body.editing #btn-print {{ display: none; }}
 	    hideFind();
 	    window.__setBaseHref('');
 	    document.getElementById('preview').innerHTML = previewHtml;
+	    buildToc();
 	    ta.value = '';
 	    updateDocumentStats('');
 	    setDirty(false);
@@ -2062,6 +2209,8 @@ window.__mdPreviewInstallUpdateCheck({{
         btn_update_js = escape_js(s.btn_update),
         stat_words_js = escape_js(s.stat_words),
         stat_chars_js = escape_js(s.stat_chars),
+        btn_toc = s.btn_toc,
+        toc_title = s.toc_title,
         app_version = update_current_version(),
         test_update_release_js = test_update_release_js(),
         native_updater = native_updater,
@@ -2500,6 +2649,53 @@ mod tests {
         assert_eq!(ThemeChoice::from_str("dark"), ThemeChoice::Dark);
         assert_eq!(ThemeChoice::from_str("unexpected"), ThemeChoice::System);
         assert_eq!(ThemeChoice::Dark.as_str(), "dark");
+    }
+
+    #[test]
+    fn dump_demo_page_when_requested() {
+        let Some(out) = std::env::var_os("MD_PREVIEW_DUMP_PAGE") else {
+            return;
+        };
+        let md = include_str!("../../verify/demo.md");
+        let strings = Strings::for_lang(Lang::Zh);
+        let page = build_page(
+            &md_to_html(md),
+            md,
+            None,
+            EnhanceFlags::default(),
+            &strings,
+            false,
+            true,
+        );
+        std::fs::write(out, page).unwrap();
+    }
+
+    #[test]
+    fn page_includes_outline_sidebar_navigation() {
+        let strings = Strings::for_lang(Lang::Zh);
+        let page = build_page(
+            &md_to_html("# 标题\n\n## 小节"),
+            "# 标题\n\n## 小节",
+            None,
+            EnhanceFlags::default(),
+            &strings,
+            false,
+            true,
+        );
+
+        assert!(page.contains(r#"<aside id="toc-panel""#));
+        assert!(page.contains(r#"<nav id="toc"></nav>"#));
+        assert!(page.contains(r#"id="btn-toc""#));
+        assert!(page.contains("body.toc-open.has-toc #toc-panel"));
+        assert!(page.contains("function buildToc()"));
+        assert!(page.contains("function updateTocActive()"));
+        assert!(page.contains("document.querySelectorAll('#preview h1[id]"));
+        assert!(page.contains("md-preview-toc-open-v1"));
+        assert!(page.contains(">目录</div>"));
+        assert!(page.contains("章节导航"));
+        // Print and editing modes must not leave the sidebar visible.
+        assert!(page.contains(".toolbar, .tabbar, #editor, #toc-panel"));
+        assert!(page.contains("body.editing #toc-panel { display: none !important; }"));
     }
 
     #[test]

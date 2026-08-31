@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+
+- Added a collapsible left outline sidebar that lists every chapter heading (H1–H6) of the current document, with click-to-jump navigation and scroll-spy highlighting of the section being read.
+- The outline can be toggled from the toolbar or with `Cmd/Ctrl+T`, remembers its open state across launches, and hides automatically for documents without headings, the empty/missing states, source editing, and printing.
+- Styled the outline for both light and dark themes, with indentation that reflects the heading hierarchy.
+
 ## 1.4.0
 
 - Added local Markdown and text document navigation: relative and absolute file links now open or activate an MD Preview tab, while missing or unsupported local targets stay on the current preview.
