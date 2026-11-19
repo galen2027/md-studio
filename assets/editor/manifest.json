@@ -1,0 +1,73 @@
+{
+  "name": "vditor",
+  "version": "4.0.1",
+  "source": "https://registry.npmjs.org/vditor/-/vditor-4.0.1.tgz",
+  "integrity": "sha512-CyajvPNE8fjCgEAzAaSxVEEWwQMJ5FTIVkNn3k+5IRaldqGwPRr8Dx2QLALHGCby8L/AJ6pQXjXiSPUGhHGmDw==",
+  "license_sources": {
+    "LICENSE": "https://github.com/Vanessa219/vditor/blob/master/LICENSE",
+    "LUTE-LICENSE": "https://github.com/88250/lute/blob/master/LICENSE",
+    "KATEX-LICENSE": "https://github.com/KaTeX/KaTeX/blob/v0.16.9/LICENSE"
+  },
+  "assets": [
+    {
+      "path": "KATEX-LICENSE",
+      "sha256": "766ccc1f306c885aa45542a9846bbd0a505b27a0374f146778171c2254ce18e3",
+      "bytes": 1107
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "c50d6e1944c4c1558ef12a5cfa4f0a4e8c927a56908c1a587c9d60400eef66fe",
+      "bytes": 1088
+    },
+    {
+      "path": "LUTE-LICENSE",
+      "sha256": "5a36a4ef787bb02ae700b92030d98411736c5ec3879b75b03fa839b415d1b7d0",
+      "bytes": 9589
+    },
+    {
+      "path": "dist/index.css",
+      "sha256": "c6e693e24d3c0b472b435d48d9baff62bee62d13f5265723265256e73f310dba",
+      "bytes": 48033
+    },
+    {
+      "path": "dist/index.min.js",
+      "sha256": "aac93a3647a200b324dbb40734c173893205fe2ed7330336dd376582d33a04cd",
+      "bytes": 296892
+    },
+    {
+      "path": "dist/css/content-theme/dark.css",
+      "sha256": "79529741d2e94b6dd3dd72bc660f91497127188c8d2aa5bffd28fdbb60b9c7c9",
+      "bytes": 3028
+    },
+    {
+      "path": "dist/css/content-theme/light.css",
+      "sha256": "9848c5a4d637f1803859b18ece4aa9df17d03a706f3d6416ba729c357d4ee360",
+      "bytes": 2755
+    },
+    {
+      "path": "dist/js/i18n/en_US.js",
+      "sha256": "91c5b70447a0d33770e17850ff1ddc4b0c88b222d25941c02c896682a56172cf",
+      "bytes": 2419
+    },
+    {
+      "path": "dist/js/i18n/zh_CN.js",
+      "sha256": "6a0c07e6c40f934715b0bebcea20bdbbf20c34ba70ab9ea8d22336a1c47ab09c",
+      "bytes": 2564
+    },
+    {
+      "path": "dist/js/icons/ant.js",
+      "sha256": "a91e14e09dcd7b99f49b7b8dcc6301fed6774d62547fcf4e971757aa3a802c33",
+      "bytes": 42983
+    },
+    {
+      "path": "dist/js/katex/mhchem.min.js",
+      "sha256": "f0ca03df194b8c3d6017ff455db6a0ef98857905663fa311a6cded788b15340b",
+      "bytes": 33730
+    },
+    {
+      "path": "dist/js/lute/lute.min.js",
+      "sha256": "53b61b051a3dfd9ee5a5010c873233679e139d8e62c49da08b4c2f2c195587cb",
+      "bytes": 3743299
+    }
+  ]
+}

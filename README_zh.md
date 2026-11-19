@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20iOS%20%7C%20Android-lightgrey)](https://github.com/vorojar/md-preview/releases)
 [![App Store](https://img.shields.io/badge/App%20Store-Local%20Markdown%20Preview-blue?logo=appstore)](https://apps.apple.com/cn/app/local-markdown-preview/id6779451523)
-[![Binary size](https://img.shields.io/badge/binary-~5MB-green)](https://github.com/vorojar/md-preview/releases)
+[![Binary size](https://img.shields.io/badge/binary-~6.59%20MiB-green)](https://github.com/vorojar/md-preview/releases)
 
 > 多份 Markdown，一个轻量窗口。沿本地文档链接跳转、查看统计、缩放正文并自动保存编辑，不必启动一整个 IDE。
 
@@ -46,12 +46,26 @@ AI 编程工具现在会生成大量 Markdown：`README.md`、`plan.md`、任务
 | 平台 | 包名 | 说明 |
 |---|---|---|
 | macOS | `MD-Preview-macOS-universal.dmg` | Apple Silicon 和 Intel 通用。Release 版本会签名、公证。 |
-| Windows | `MD-Preview-windows-x64.exe` | 单文件应用。应用内更新会下载新版 exe，校验 SHA-256，退出后替换自己并重启。 |
+| Windows | `MD-Preview-windows-x64.exe` | 便携式 x64 单文件应用，MSVC CRT 已静态链接。应用内更新会下载新版 exe，校验 SHA-256，退出后替换自己并重启。 |
 | Linux | `MD-Preview-linux-x64.tar.gz` | 需要系统 WebKitGTK 运行时。 |
 | iOS / iPadOS | [App Store 上的 Local Markdown Preview](https://apps.apple.com/cn/app/local-markdown-preview/id6779451523) | 原生 iPhone / iPad 预览器，可从“文件”和 iOS 分享面板打开 Markdown。 |
 | Android | `MD-Preview-Android.apk` | 原生 Android 预览器，可从文件管理器、微信、企业微信和分享面板打开 Markdown。 |
 
 Android 版本以单独的 mobile release 发布，例如 [mobile-android-v1.0.7](https://github.com/vorojar/md-preview/releases/tag/mobile-android-v1.0.7)。iOS 版本已经在 App Store 上架，名称为 [Local Markdown Preview](https://apps.apple.com/cn/app/local-markdown-preview/id6779451523)。
+
+### Windows 便携性与导出依赖
+
+Windows x64 发布版静态链接 MSVC C Runtime，接收方不需要另装 Visual C++ Redistributable。界面仍必须使用 Microsoft Edge WebView2 Runtime；完整更新的 Windows 11 通常已经自带，缺失时 MD Preview 会显示原生下载提示并写入诊断日志。Mermaid、KaTeX、代码高亮和图标都已内嵌在 EXE 中。
+
+生成 DOCX 不要求安装 Microsoft Word；只有打开生成文件时才需要 Word、WPS 或 LibreOffice。“导出 PDF”是唯一需要额外浏览器的路径，目标电脑必须安装 Microsoft Edge 或 Google Chrome。当前 Windows 发布物未做 Authenticode 签名，SmartScreen 可能提示“未知发布者”；运行前请先核对发布页给出的 SHA-256。
+
+v1.9.9 支持“所见即所得编辑”：标题、含粗体/链接/行内代码的段落、列表、引用和表格可直接修改，自动保存 / Ctrl+S 写回原 MD。左预览、右源码分栏采用独立滚动和源码位置同步；真正外部文件冲突继续保护编辑，自身保存的延迟通知不再误报。
+
+点击 Mermaid 图放大，再点“编辑节点”：可在图上点选 flowchart/graph 节点，修改文字、删除节点及关联连线、撤销图修改。先备份、校验和渲染，再应用到原 MD；保留放大、空格拖动、高清 PNG 与 SVG。复杂扩展语法或数字索引样式的删除操作会提示改用源码，不支持节点拖拽。详见 [模块设计](docs/预览编辑模块设计_v1.2_261119.md)。
+
+进入所见即所得编辑前备份原文，打开但未修改不重写文件；编辑后 Markdown 排版可能规范化，撤销栈不跨模式/标签保留。
+
+v1.9.6 为大尺寸 Mermaid 图增加“按住空格键 + 鼠标左键拖动”平移；只读文件保存失败时可选择另存为、放弃并关闭或取消，不再陷入无法退出的循环；同时修复 Windows 中文输入法首次聚焦与切回程序后的输入上下文。最稳妥的部署方式仍是把 EXE 复制到固定的本机目录并启动一次后再设置默认应用。
 
 也可以从源码构建：
 
@@ -80,7 +94,9 @@ md-preview README.md plan.md task.md
 md-preview
 ```
 
-MD Preview 支持通过拖拽、打开对话框、最近文件或命令行打开 `.md` / `.txt` 文件。桌面端会用标签承载文档；重复打开同一路径时只激活已有标签。使用标签栏 `+` 或 `Cmd/Ctrl+N` 可在当前文档旁新建 Markdown，并立即进入源码编辑。重启后恢复标签顺序和活动文档，后台文档正文仍留在磁盘，点击时才加载。相对路径图片和受支持的本地文档链接都会按当前 Markdown 所在目录解析，本地文档目录可以自然渲染和跳转。
+MD Preview 支持通过拖拽、打开对话框、最近文件或命令行打开 `.md` / `.txt` 文件。桌面端会用标签承载文档；Windows 上已有程序运行时，再双击或启动打开其他文件会复用当前进程并新增或激活标签。Windows 单实例启动会先绑定分散候选端口，只在确认冲突时做有界探测，避免旧版出现多秒超时等待。使用标签栏 `+` 或 `Cmd/Ctrl+N` 可在当前文档旁新建 Markdown，并立即进入源码编辑。重启后恢复标签顺序和活动文档，后台文档正文仍留在磁盘，点击时才加载。标准 Markdown 图片引用和受支持的本地文档链接始终按当前 Markdown 所在目录解析，不依赖 EXE 所在目录。
+
+若要把文档复制到其他电脑后仍正常显示，请把 Markdown 和图片目录一起复制并保持相对目录结构。程序可以读取当前电脑上存在的绝对路径和本机 `file:` 图片，但带盘符的绝对路径本身不具备跨电脑可移植性。
 
 如果标签对应的文件被移动或删除，标签不会静默消失。点击后可以重新定位文件，或者关闭标签。
 
@@ -96,11 +112,11 @@ iPhone 和 iPad 上，Local Markdown Preview 可以从“文件”和 iOS 分享
 
 | 功能 | 说明 |
 |---|---|
-| 桌面标签 | 在一个窗口打开多份 Markdown 或文本；重复路径只激活已有标签。 |
+| 桌面标签 | 在一个窗口打开多份 Markdown 或文本；Windows 后续文件启动复用现有进程，重复路径只激活已有标签，并通过先绑定、分散候选端口保持快速启动。 |
 | 会话恢复 | 重启后恢复标签顺序和活动文档，但不缓存后台文档正文。 |
 | 缺失文件 | 文件移动或删除后保留缺失标签，提供重新定位和关闭操作。 |
 | Finder 工作流 | macOS 上从 Finder 新建 Markdown，并立即在 MD Preview 里编辑。 |
-| 可靠自动保存 | 源码输入停顿片刻即保存；预览、切换标签、关闭标签/窗口或退出前强制写盘，保存失败时保留标签和编辑内容。 |
+| 可靠自动保存 | 源码输入停顿片刻即保存；预览、切换标签、关闭标签/窗口或退出前强制写盘；只读文件保存失败时可另存为、放弃关闭或取消，并始终保留编辑内容。 |
 | 本地文档链接 | 相对或绝对的现有 Markdown / 文本链接会打开或激活标签；无效本地目标不会替换当前预览。 |
 | 头部元信息 | 文档开头的 YAML metadata 保持元信息排版，不再被挤成标题。 |
 | 实时统计 | 标签栏显示非空白字符数与总字符数，源码编辑时同步更新。 |
@@ -110,13 +126,17 @@ iPhone 和 iPad 上，Local Markdown Preview 可以从“文件”和 iOS 分享
 | 手机端打开 | iOS 支持从“文件”和分享面板打开 Markdown；Android 支持从文件管理器、微信、企业微信和系统分享面板打开 Markdown。 |
 | 拖拽打开 | 把 Markdown 文件拖进窗口即可打开。 |
 | 命令行打开 | `md-preview path/to/file.md` 直接从 shell 打开。 |
-| 预览搜索 | `Cmd/Ctrl+F` 打开轻量搜索栏，在渲染后的文档内查找。 |
+| 查找与替换 | `Cmd/Ctrl+F` 在渲染预览中查找；`Ctrl+H` 进入 Markdown 源码并打开替换栏，支持单项和全部替换。 |
 | 实时刷新 | 外部编辑保存后，预览自动更新。 |
-| 源码编辑 | `Cmd/Ctrl+E` 切到源码模式；编辑会自动保存，`Cmd/Ctrl+S` 可立即保存。 |
+| 源码编辑 | `Cmd/Ctrl+E` 切到源码模式；编辑会自动保存，`Cmd/Ctrl+S` 可立即保存；Windows 中文 IME 在首次聚焦和切回窗口后可直接组合输入。 |
+| 左右分栏 | 工具栏按钮可同时显示左侧预览和右侧源码，沿用自动保存、替换和未命名草稿预览。 |
 | 原生打印 | `Cmd/Ctrl+P` 打开系统打印对话框，只打印预览内容。 |
 | 代码高亮 | highlight.js 离线内置，首屏之后再注入，不阻塞打开。 |
 | 数学公式 | KaTeX 按需渲染 `$...$`、`$$...$$`、`\(...\)`、`\[...\]`。 |
-| 图表 | Mermaid fenced code block 只在文档实际使用时本地渲染。 |
+| 图表 | Mermaid fenced code block 只在文档实际使用时本地渲染；灯箱放大后可按住空格键并用鼠标左键拖动到局部位置。 |
+| 图表导出 | 灯箱下载明确区分 SVG 矢量原图与 3× PNG；Word 导出使用版面尺寸稳定的 300 PPI PNG 兼容回退。 |
+| DOCX 表格 | Word 导出按模板页面和内容权重生成固定列网格，六类表级边框统一为深色 0.75 pt 实线，并保留单元格留白、数字对齐和跨页重复表头；Markdown/HTML 换行继续保留，不再依赖不可预测的 autofit。 |
+| 本地图片 | 支持文档相对路径、父目录、Windows 反斜杠、本机绝对路径和本机 `file:` 的 JPG/PNG/GIF/WebP/SVG/BMP/ICO/AVIF；通过受控只读资源通道流式加载，并拒绝 UNC 与远程 `file:` 共享。 |
 | GitHub Alerts | `[!NOTE]`、`[!TIP]`、`[!IMPORTANT]`、`[!WARNING]`、`[!CAUTION]` blockquote 会渲染成提示块。 |
 | 高亮标记 | `==高亮==` 会渲染成 marked text，适合笔记和 AI 生成文档。 |
 | 暗色模式 | 自动跟随 macOS、Windows、Linux 的系统主题。 |
@@ -132,6 +152,7 @@ iPhone 和 iPad 上，Local Markdown Preview 可以从“文件”和 iOS 分享
 | `Cmd/Ctrl + N` | 新建 Markdown 并进入源码编辑 |
 | `Cmd/Ctrl + O` | 打开文件 |
 | `Cmd/Ctrl + F` | 在预览里搜索 |
+| `Ctrl + H` | 进入源码模式并打开查找替换 |
 | `Cmd/Ctrl + E` | 切换预览 / 源码编辑 |
 | `Cmd/Ctrl + S` | 源码编辑模式下保存 |
 | `Cmd/Ctrl + P` | 打印预览 |
@@ -140,6 +161,7 @@ iPhone 和 iPad 上，Local Markdown Preview 可以从“文件”和 iOS 分享
 | `Cmd/Ctrl -` | 缩小文档正文 |
 | `Cmd/Ctrl 0` | 重置文档正文缩放 |
 | `Esc` | 退出源码编辑模式，并在需要时保存 |
+| `空格键 + 鼠标左键拖动` | 在 Mermaid 灯箱中平移已放大的图表 |
 
 ## Markdown 支持
 
@@ -151,7 +173,7 @@ MD Preview 先用 `pulldown-cmark` 完成基础 Markdown 解析，再只在需�
 - 40+ 语言离线代码高亮，包含 Delphi / Pascal
 - KaTeX 离线数学公式渲染，并保护公式不被 Markdown 强调语法破坏
 - Mermaid 离线渲染 ```` ```mermaid ```` fenced code block
-- 通过按文件设置 `<base>` 支持相对路径图片
+- 标准 Markdown 图片引用按已打开文档目录解析，并通过受控只读资源通道加载
 - 支持跳转到相对或绝对路径的本地 Markdown / 文本文档
 - 保持 `---` 或 `...` 包围的 YAML front matter 清晰可读
 - 打印样式自动移除应用工具栏和源码编辑区
@@ -201,7 +223,7 @@ WEBKIT_DISABLE_COMPOSITING_MODE=1 md-preview your-file.md
 
 **Windows 不能自动设为默认 Markdown 应用**
 
-Windows 不允许应用静默接管文件关联。MD Preview 会把自己注册到“打开方式”列表，你可以在资源管理器或 Windows 设置里选择它。
+Windows 不允许应用静默接管文件关联。MD Preview 会把自己注册到“打开方式”列表，你可以在资源管理器或 Windows 设置里选择它。v1.9.5 会校验实际注册表命令、移除 Explorer 不接受的 Windows verbatim 路径前缀，并同时注册当前 EXE 文件名及兼容 alias。若旧默认项指向已失效的软链接或硬链接，请把 EXE 复制到固定本机目录，在新位置启动一次，再从“打开方式”重新选择。
 
 **公式或图表显示成普通文本**
 

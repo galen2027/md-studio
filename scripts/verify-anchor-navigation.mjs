@@ -1,14 +1,17 @@
 import { createRequire } from 'node:module';
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 
-const root = resolve(new URL('..', import.meta.url).pathname);
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const enhanceJs = await readFile(resolve(root, 'assets/enhance/preview-enhance.js'), 'utf8');
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(process.env.MD_PREVIEW_TEST_BROWSER ? {
+  executablePath: process.env.MD_PREVIEW_TEST_BROWSER,
+} : {});
 const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
 
 const encodedAnchor = encodeURIComponent('需求概述');

@@ -1,16 +1,19 @@
 [package]
 name = "md-preview"
-version = "1.5.0"
+version = "1.9.9"
 edition = "2021"
 
 [dependencies]
 wry = "0.50"
 tao = "0.33"
 pulldown-cmark = { version = "0.12", default-features = false, features = ["html"] }
-rfd = "0.15"
+rfd = { version = "0.15", features = ["common-controls-v6"] }
 notify = "7"
 open = "5"
-image = { version = "0.25", default-features = false, features = ["png", "ico"] }
+image = { version = "0.25", default-features = false, features = ["png", "ico", "jpeg", "gif", "bmp"] }
+regex = "1"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+raw-window-handle = "0.6"
 sys-locale = "0.3"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

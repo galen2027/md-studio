@@ -7,7 +7,10 @@ const { chromium } = require('playwright');
 const root = new URL('../..', import.meta.url);
 const preview = new URL('mobile/shared/preview.html', root).href;
 const previewCss = await readFile(new URL('mobile/shared/mobile-preview.css', root), 'utf8');
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({
+  headless: true,
+  ...(process.env.MD_PREVIEW_TEST_BROWSER ? { executablePath: process.env.MD_PREVIEW_TEST_BROWSER } : {}),
+});
 const page = await browser.newPage({
   viewport: { width: 390, height: 844 },
   deviceScaleFactor: 2,

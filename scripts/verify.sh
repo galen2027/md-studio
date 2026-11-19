@@ -8,10 +8,18 @@ echo "[agent-verify] project: $ROOT"
 
 ran=0
 
+if command -v python3 >/dev/null 2>&1 && python3 -c 'import sys' >/dev/null 2>&1; then
+  PYTHON_BIN="python3"
+elif command -v python >/dev/null 2>&1 && python -c 'import sys' >/dev/null 2>&1; then
+  PYTHON_BIN="python"
+else
+  PYTHON_BIN=""
+fi
+
 AGENT_WORKFLOW="/Users/longjiewu/.agent-workflow/scripts/agent_workflow.py"
-if [ -x "$AGENT_WORKFLOW" ]; then
+if [ -x "$AGENT_WORKFLOW" ] && [ -n "$PYTHON_BIN" ]; then
   echo "[agent-verify] guard"
-  python3 "$AGENT_WORKFLOW" guard "$ROOT"
+  "$PYTHON_BIN" "$AGENT_WORKFLOW" guard "$ROOT"
 fi
 
 has_npm_script() {
@@ -40,7 +48,7 @@ if [ -f package.json ]; then
   fi
 fi
 
-if [ -f pyproject.toml ] || [ -f pytest.ini ] || [ -d tests ]; then
+if [ -f pyproject.toml ] || [ -f pytest.ini ] || [ -f tests/conftest.py ]; then
   if command -v pytest >/dev/null 2>&1; then
     echo "[agent-verify] pytest"
     pytest
@@ -69,20 +77,24 @@ if [ -f release-sign.sh ]; then
 fi
 
 if [ -f src/main.rs ]; then
+  if [ -z "$PYTHON_BIN" ]; then
+    echo "[agent-verify] Python 3 is required for desktop contract checks" >&2
+    exit 1
+  fi
   echo "[agent-verify] desktop print stylesheet"
-  python3 - <<'PY'
+  "$PYTHON_BIN" - <<'PY'
 from pathlib import Path
-src = Path("src/main.rs").read_text()
+src = Path("src/main.rs").read_text(encoding="utf-8")
 if "@page {{\n  margin: 12mm;\n}}" not in src:
     raise SystemExit("src/main.rs must set @page margin: 12mm for native desktop printing")
 if "@media print {{" not in src or "#app {{ max-width: none; padding: 0; }}" not in src:
     raise SystemExit("src/main.rs must keep print media rules focused on preview output")
 PY
   echo "[agent-verify] desktop tabs and macOS close-tab shortcut"
-  python3 - <<'PY'
+  "$PYTHON_BIN" - <<'PY'
 from pathlib import Path
-src = Path("src/main.rs").read_text()
-session = Path("src/session.rs").read_text()
+src = Path("src/main.rs").read_text(encoding="utf-8")
+session = Path("src/session.rs").read_text(encoding="utf-8")
 if 'id="tabbar"' not in src or "window.__setTabs" not in src:
     raise SystemExit("desktop page must expose the top tab bar and deterministic tab renderer")
 if "session.json" not in src or "PersistedSession" not in session:
@@ -96,21 +108,35 @@ if "window.__setMissing" not in src or "data-locate-tab" not in src:
 for marker in ("new-file", "AUTOSAVE_DEBOUNCE_MS = 700", "window.__mdPreviewResolveExternalChange", "UserEvent::Quit"):
     if marker not in src:
         raise SystemExit(f"desktop New Markdown/autosave contract is missing: {marker}")
+for marker in ('id="btn-split"', "window.__mdPreviewToggleSplit", "body.split-view #app", "UserEvent::UntitledPreview"):
+    if marker not in src:
+        raise SystemExit(f"desktop split-view contract is missing: {marker}")
+for marker in ("http://mdpreview-image.localhost/", "LOCAL_IMAGE_GENERATIONS_TO_KEEP", "resolve_local_image_path"):
+    if marker not in src:
+        raise SystemExit(f"desktop local-image transport contract is missing: {marker}")
+single_instance = Path("src/single_instance.rs").read_text(encoding="utf-8")
+for marker in ("TcpListener", "InstanceRole::Forwarded", "normalize_windows_path_identity"):
+    if marker not in single_instance:
+        raise SystemExit(f"Windows single-instance contract is missing: {marker}")
 PY
   ran=1
 fi
 
 if [ -f docs/index.html ] && [ -f README.md ] && [ -f README_zh.md ]; then
   echo "[agent-verify] current product story"
-  python3 - <<'PY'
+  "$PYTHON_BIN" - <<'PY'
 from pathlib import Path
-import tomllib
+import re
 
-version = tomllib.loads(Path("Cargo.toml").read_text())["package"]["version"]
-site = Path("docs/index.html").read_text()
-readme = Path("README.md").read_text()
-readme_zh = Path("README_zh.md").read_text()
-src = Path("src/main.rs").read_text()
+manifest = Path("Cargo.toml").read_text(encoding="utf-8")
+match = re.search(r'^version\s*=\s*"([^"]+)"', manifest, re.MULTILINE)
+if not match:
+    raise SystemExit("Cargo.toml package version is missing")
+version = match.group(1)
+site = Path("docs/index.html").read_text(encoding="utf-8")
+readme = Path("README.md").read_text(encoding="utf-8")
+readme_zh = Path("README_zh.md").read_text(encoding="utf-8")
+src = Path("src/main.rs").read_text(encoding="utf-8")
 
 if f'"softwareVersion": "{version}"' not in site:
     raise SystemExit("website structured data must match Cargo.toml version")
@@ -123,13 +149,13 @@ for marker in ("Desktop tabs", "Session restore", "Finder workflow"):
 for marker in ("桌面标签", "会话恢复", "Finder 工作流"):
     if marker not in readme_zh:
         raise SystemExit(f"README_zh.md is missing v1.2 product marker: {marker}")
-for marker in ("New in v1.4", "Local document links", "Counts, zoom, continuity", "Reliable autosave"):
+for marker in (f"New in v{version}", "Local document links", "Counts, zoom, continuity", "Reliable autosave", "Split edit and preview", "Portable paths and images"):
     if marker not in site:
         raise SystemExit(f"website is missing current product marker: {marker}")
-for marker in ("Local document links", "Live statistics", "Content zoom", "Scroll continuity", "Reliable autosave"):
+for marker in ("Local document links", "Live statistics", "Content zoom", "Scroll continuity", "Reliable autosave", "Split view", "Local images"):
     if marker not in readme:
         raise SystemExit(f"README.md is missing current product marker: {marker}")
-for marker in ("本地文档链接", "实时统计", "正文缩放", "滚动连续", "可靠自动保存"):
+for marker in ("本地文档链接", "实时统计", "正文缩放", "滚动连续", "可靠自动保存", "左右分栏", "本地图片"):
     if marker not in readme_zh:
         raise SystemExit(f"README_zh.md is missing current product marker: {marker}")
 if "What's New" not in src or "Follow local document links" not in src:
@@ -162,7 +188,7 @@ if [ -f scripts/verify-anchor-navigation.mjs ]; then
     echo "[agent-verify] anchor navigation"
     NODE_PATH="$BUNDLED_NODE_MODULES" "$BUNDLED_NODE" scripts/verify-anchor-navigation.mjs
     ran=1
-  elif command -v node >/dev/null 2>&1 && node -e "import('playwright')" >/dev/null 2>&1; then
+  elif command -v node >/dev/null 2>&1 && node -e "require('playwright')" >/dev/null 2>&1; then
     echo "[agent-verify] anchor navigation"
     node scripts/verify-anchor-navigation.mjs
     ran=1
@@ -178,7 +204,7 @@ if [ -f scripts/verify-desktop-search.mjs ]; then
     echo "[agent-verify] desktop search"
     NODE_PATH="$BUNDLED_NODE_MODULES" "$BUNDLED_NODE" scripts/verify-desktop-search.mjs
     ran=1
-  elif command -v node >/dev/null 2>&1 && node -e "import('playwright')" >/dev/null 2>&1; then
+  elif command -v node >/dev/null 2>&1 && node -e "require('playwright')" >/dev/null 2>&1; then
     echo "[agent-verify] desktop search"
     node scripts/verify-desktop-search.mjs
     ran=1
@@ -194,13 +220,46 @@ if [ -f scripts/verify-desktop-reading-tools.mjs ]; then
     echo "[agent-verify] desktop reading tools"
     NODE_PATH="$BUNDLED_NODE_MODULES" "$BUNDLED_NODE" scripts/verify-desktop-reading-tools.mjs
     ran=1
-  elif command -v node >/dev/null 2>&1 && node -e "import('playwright')" >/dev/null 2>&1; then
+  elif command -v node >/dev/null 2>&1 && node -e "require('playwright')" >/dev/null 2>&1; then
     echo "[agent-verify] desktop reading tools"
     node scripts/verify-desktop-reading-tools.mjs
     ran=1
   else
     echo "[agent-verify] skip desktop reading tools: playwright unavailable"
   fi
+fi
+
+if [ -f scripts/verify-mermaid-export.mjs ]; then
+  BUNDLED_NODE="/Users/longjiewu/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node"
+  BUNDLED_NODE_MODULES="/Users/longjiewu/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules"
+  if [ -x "$BUNDLED_NODE" ] && [ -d "$BUNDLED_NODE_MODULES" ]; then
+    echo "[agent-verify] Mermaid export quality"
+    NODE_PATH="$BUNDLED_NODE_MODULES" "$BUNDLED_NODE" scripts/verify-mermaid-export.mjs
+    ran=1
+  elif command -v node >/dev/null 2>&1 && node -e "require('playwright')" >/dev/null 2>&1; then
+    echo "[agent-verify] Mermaid export quality"
+    node scripts/verify-mermaid-export.mjs
+    ran=1
+  else
+    echo "[agent-verify] skip Mermaid export quality: playwright unavailable"
+  fi
+fi
+
+if command -v node >/dev/null 2>&1 && node -e "require('playwright')" >/dev/null 2>&1; then
+  echo "[agent-verify] editor asset integrity"
+  node scripts/verify-editor-assets.mjs
+  echo "[agent-verify] structured preview editing"
+  node --check assets/enhance/split-sync.js
+  node --check assets/enhance/mermaid-edit.js
+  node scripts/verify-preview-edit.mjs
+  if [ "${MD_PREVIEW_VERIFY_NATIVE:-0}" = "1" ]; then
+    echo "[agent-verify] Windows native preview workflows"
+    cargo build
+    node scripts/verify-preview-workflows.mjs
+  fi
+  ran=1
+else
+  echo "[agent-verify] skip preview text editing: playwright unavailable"
 fi
 
 if [ -x scripts/verify-sparkle-update.sh ]; then
@@ -259,7 +318,7 @@ if [ -f mobile/scripts/verify-mobile-renderer.mjs ]; then
     echo "[agent-verify] mobile renderer"
     NODE_PATH="$BUNDLED_NODE_MODULES" "$BUNDLED_NODE" mobile/scripts/verify-mobile-renderer.mjs
     ran=1
-  elif command -v node >/dev/null 2>&1 && node -e "import('playwright')" >/dev/null 2>&1; then
+  elif command -v node >/dev/null 2>&1 && node -e "require('playwright')" >/dev/null 2>&1; then
     echo "[agent-verify] mobile renderer"
     node mobile/scripts/verify-mobile-renderer.mjs
     ran=1
@@ -268,10 +327,12 @@ if [ -f mobile/scripts/verify-mobile-renderer.mjs ]; then
   fi
 fi
 
-if [ -x mobile/scripts/verify-release-readiness.sh ]; then
+if [ -x mobile/scripts/verify-release-readiness.sh ] && [ "$(uname -s)" = "Darwin" ]; then
   echo "[agent-verify] mobile release readiness"
   mobile/scripts/verify-release-readiness.sh
   ran=1
+elif [ -x mobile/scripts/verify-release-readiness.sh ]; then
+  echo "[agent-verify] skip mobile release readiness: requires macOS tooling"
 fi
 
 if [ "$ran" -eq 0 ]; then

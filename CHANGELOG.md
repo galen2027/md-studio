@@ -1,5 +1,123 @@
 # Changelog
 
+## 1.9.9 — 2026-11-19
+
+- Replaced the 500 ms self-write suppression window with disk-content snapshots, including the loaded version. Rechecked queued notifications before resolving external conflicts; genuine conflicting edits remain protected. Localized the warning in Chinese.
+- Added UTF-16 source positions to rendered blocks, list items and table rows. Split view now has independently scrolling panes with semantic bidirectional navigation, caret reveal and position retention across resizing and mode changes. Restored normal page flow for printing.
+- Added flowchart/graph node selection, label editing, node-and-edge deletion and diagram undo in the existing Mermaid lightbox, in both reading and WYSIWYG modes. Back up, parse, compare unaffected nodes/edges and render before applying source patches. Repeated identical diagrams are selected by document order.
+- Kept original SVG, 3x PNG, vector zoom and Space-drag, with responsive editing controls and viewport fitting. Unsupported syntax and indexed edge styles fail safely to source editing; no drag editing is added.
+- Added native regressions for delayed identical notifications, real external conflicts, semantic split alignment, node clicks, six flowchart syntax families, edit/delete/undo and duplicate diagrams, plus UTF-16/CRLF source-map tests.
+- Matched release metadata validation to both deployment-guide filename styles and bullet/table metadata fields, retained third-party license files in Windows artifacts, and archived cumulative source history with versioned release checksums. See `release/README.md` for the Chinese summary and archive policy.
+
+## 1.9.8 — 2026-11-19
+
+- Replaced the restricted plain-text preview prototype with pinned Vditor 4.0.1 WYSIWYG editing. Headings, rich paragraphs, nested/ordered lists, quotes, links, inline code, empty cells and formatted table cells are editable directly.
+- Embedded editor assets behind a scoped read-only protocol and loaded them only on demand. No runtime CDN or Node dependency; vendored hashes and upstream licenses are retained.
+- Required an exact original-file backup before opening the structured editor. Opening without editing preserves source; subsequent edits may normalize Markdown layout. Autosave, immediate Ctrl+S, tab/window flushing, save-failure recovery and stale-save guards share the existing source state.
+- Preserved document-relative image references while mapping display-only URLs, refreshing image registrations during long editing sessions. Retained Mermaid source, zoom, Space-drag, SVG and 3x PNG download.
+- Kept search inside structured editing with CSS range highlights, fixed local-base SVG toolbar icons and narrow-screen menus, and rebuilt the latest source through Rust before print/PDF.
+- Synchronized inline formatting actions with the current selection so stale toolbar highlights cannot invert a rapid bold/italic/strike action after moving between blocks.
+- Added real WebView2 regressions using fixture and real document copies, including metadata, formulas, bold/link/code edits, lists/quotes/tables, undo/redo, composition ordering, immediate tab switches, repeated image saves, backups, reopen and native diagram downloads.
+
+## 1.9.7 — 2026-11-19
+
+- Added an opt-in preview text editor for plain top-level paragraphs and plain table headers/cells, including explicitly empty cells. Edits update the same Markdown source and reuse autosave, Ctrl+S, tab flushing, and read-only recovery.
+- Isolated parser-backed UTF-16 source mapping and browser editing into dedicated modules. Only changed source ranges are replaced; literal Markdown punctuation is encoded and newlines use `<br>`. Existing textarea saves normalize CRLF to LF.
+- Kept rich/unsupported blocks read-only and preserved Mermaid zoom, Space-drag, high-resolution PNG, and SVG download. Mermaid label editing is planned separately.
+- Preserved active editing DOM across save acknowledgements, blocked stale source mappings, and added CJK/emoji/CRLF, empty-cell, literal-text, paste, undo/redo, IME, narrow-layout, and real WebView2 file-write regressions.
+
+## 1.9.6 — 2026-10-15
+
+- Added standard large-diagram navigation: after opening a Mermaid diagram, hold Space and drag with the left mouse button to pan horizontally and vertically. Vector zoom, wheel zoom, Fit, SVG/PNG download, Escape, and backdrop close remain unchanged.
+- Replaced the read-only save-failure close loop with an explicit recovery decision. Window and tab close now offer Save As, discard-and-close/exit, or Cancel while preserving the edited source; failed autosaves pause until the user explicitly retries.
+- Improved Windows Chinese IME behavior by priming the populated textarea without losing its selection, suppressing shortcuts and autosave during active composition, and restoring native WebView2 plus editor focus when the app returns to the foreground.
+- Added browser and Rust regressions for Space-drag panning, IME composition/autosave ordering, save-failure choice mapping, and current-page feature markers.
+
+## 1.9.5 — 2026-10-09
+
+- Strengthened DOCX table grid rendering by raising all six table border definitions to a darker 0.75 pt solid line, while retaining the 1 pt standardized-header rule, so inside and outside lines remain visible at normal Word zoom levels.
+- Restored fast Windows startup with bind-first single-instance discovery, widely spaced lower port candidates, and bounded conflict probes instead of paying repeated connection timeouts before the first window appears.
+- Hardened Windows file-association paths: registration no longer proactively canonicalizes or resolves executable links, converts Windows verbatim paths to ordinary Win32 paths accepted by Explorer, validates the actual registry command instead of trusting only the marker file, and maintains both the current executable name and the compatibility `Applications\\md-preview.exe` alias.
+- Kept the recommended portable deployment model unchanged: copy the EXE to a stable local directory, launch it once after moving or renaming it, and then select MD Preview again under Windows “Open with” if the previous handler pointed at a replaced or broken link.
+
+## 1.9.4 — 2026-10-09
+
+- Made the Windows x64 EXE portable without a separate Visual C++ Redistributable by linking the MSVC CRT statically for normal release builds. Release verification now rejects PE imports from `VCRUNTIME*`, `MSVCP*`, or `CONCRT*`.
+- Added a recoverable WebView2 startup failure path: when the required Evergreen WebView2 Runtime is unavailable, Windows shows a Chinese native prompt with Microsoft's download entry instead of exiting silently, and records the failure in the diagnostic log. The larger Fixed Version Runtime remains intentionally unbundled.
+- Reworked DOCX table export around a collected table model and deterministic OOXML. Column widths now use bounded ASCII/CJK visual weights, the template's real page size and margins, minimum table-width tiers, and a page-safe rebalance; `tblGrid`, fixed layout, and per-cell `tcW` replace Word/WPS auto-fit.
+- Improved DOCX table readability with 0.5 pt `#D9D9D9` borders, explicit cell padding, zero paragraph spacing, 1.15 line spacing, default shaded/bold headers, the existing unshaded/non-bold standardized mode, vertical alignment by row height, and a compact table-local font for seven or more columns.
+- Preserved explicit Markdown column alignment and right-aligned all-numeric columns automatically. Header rows now repeat across pages without splitting, body rows may flow normally, and Markdown hard breaks plus `<br>`, `<br/>`, and `<br />` remain visible inside cells.
+- Hardened DOCX table compatibility: table-cell images are embedded and constrained to the column, adjacent tables remain separate in Word, nested emphasis keeps its outer style, invalid XML control characters are removed, and headers stay with the first body row when pagination permits.
+- Kept inline images inside their surrounding Word paragraph, retained centering for image-only paragraphs, and unified image/hyperlink relationship ID allocation so large image-heavy documents cannot generate duplicate OOXML relationship IDs.
+- Documented the Windows runtime boundary and release procedure: WebView2 is required, Edge or Chrome is only needed for PDF export, DOCX generation does not require Word, and unsigned builds can trigger SmartScreen. CLI arguments and Markdown/preview/PDF behavior remain compatible.
+
+## 1.9.3 — 2026-10-09
+
+- Fixed Windows local-image rendering at the actual WebView2 boundary: Markdown image sources now use a WebView2-interceptable, scoped loopback origin while file bytes remain read-only and local. The supplied six-image Chinese business document passes both exact path resolution and a real WebView2 `naturalWidth`/`naturalHeight` load check.
+- Expanded standard Markdown image resolution to cover document-relative paths, `../`, Windows backslashes, percent-encoded Unicode/spaces, local absolute paths, and local `file:` URLs. Remote URLs remain untouched, while UNC and remote `file://server` paths are rejected. Relative images stay portable when the Markdown file and image folders are copied together with the same layout; machine-specific absolute paths do not.
+- Retained a bounded set of recent image registrations so WebView2 can finish asynchronous image requests during rapid saves or tab switches without exposing arbitrary files or growing the registry without limit.
+- Added a three-state desktop view with a toolbar split button: Preview, source Edit, and Split View with preview on the left and editor on the right. Split View shares the existing dirty-state, 700 ms autosave, source replacement, statistics, and untitled-document preview pipelines.
+- Added Windows single-instance file opening. Launching or double-clicking another supported document now forwards it to the existing window, restores/focuses that window, and adds or activates its tab; a dirty active tab is preserved instead of being replaced. `--help` and `--version` still execute locally without starting or contacting the GUI.
+- Made Windows file-association registration location-aware: moving or copying the EXE and launching it once refreshes the registered command to the current executable path instead of trusting a stale marker.
+- Added Rust, browser, real WebView2, and two-process integration regression coverage for the new behavior.
+
+## 1.9.2 — 2026-10-09
+
+- Added source find-and-replace: `Ctrl+H` opens a two-row replacement bar, switches from preview to Markdown source mode, and supports previous/next navigation, Replace, and Replace All.
+- Kept replacement literal and predictable: matching is case-insensitive like preview search, while replacement text such as `$&`, `$1`, backslashes, and Markdown punctuation is inserted verbatim rather than interpreted as a regular-expression replacement.
+- Integrated replacement with the existing dirty-state, live statistics, native undo/redo, and 700 ms autosave pipeline; stale match offsets are invalidated after manual edits, and leaving edit mode closes the replacement state safely.
+- Added desktop regression coverage for unchanged `Ctrl+F` behavior, no-match handling, single/all replacement counts, autosave, undo/redo, long-document navigation, Escape/Ctrl+E cleanup, and a 390 px narrow window.
+
+## 1.9.1 — 2026-10-07
+
+- Fixed local Markdown images failing on image-heavy documents: verified the six Chinese relative image references in `机顶盒统一主页与后台各系统交互设计方案.md`; preview HTML now uses a short, read-only `mdpreview-image://` asset URL and streams the registered binary on demand instead of injecting about 8 MB of Base64 through one WebView script call.
+- Hardened local image access: only canonical files registered from the active Markdown directory can be served; absolute paths, parent traversal, encoded traversal, missing files, and symlink/junction escapes remain unavailable. Responses disable caching and MIME sniffing.
+- Fixed Mermaid export quality and format ambiguity: SVG download now exports the natural-size vector source independent of lightbox zoom, while PNG download explicitly exports a 3× raster whose SVG source is rasterized at the target intrinsic dimensions.
+- Word export now renders Mermaid fallbacks at 300 PPI and carries the SVG logical dimensions separately, so higher sampling density no longer enlarges the image's Word layout size. The stable compatibility path remains PNG for Word/WPS/LibreOffice; use the SVG download for the true vector original.
+- Added `-V` / `--version`, updated `--help`, logged dynamic preview injection failures with payload size, and added automated regression coverage for large Chinese image paths, resource isolation, vector/PNG dimensions, and DOCX layout-size decoupling.
+
+## 1.9.0
+
+- Mermaid diagrams are now clickable: a lightbox viewer opens with the *vector* SVG, so zooming to 100% (or far beyond) is always crisp — large diagrams that used to shrink into a blurry thumbnail open fitted, then zoom with +/−, mouse wheel, or Fit.
+- Original-image download from the lightbox: 下载 SVG (exact vector source) and 下载 PNG (3x raster, white background), saved via the system dialog as `<文档名>-diagram.svg/.png`.
+
+## 1.8.0
+
+- Added an About popover: the "!" button next to "+" in the tab bar shows the developer (Rowin), the app version, and the release date.
+- Added a tab context menu: right-click a file tab to "打开文件所在文件夹 / Open Containing Folder" (untitled scratch tabs are skipped).
+- Print moved into a top-right popover like Word export, with two actions: "打印 / Print…" (system print, now with the document name as the print title) and "导出 PDF / Export PDF".
+- Export PDF renders the current preview through a headless Edge/Chrome with headers and footers disabled — no more `about:blank` line in the output. Override the browser with `MD_PREVIEW_PDF_BROWSER` if needed.
+- Fixed tables being clipped when printing or saving as PDF: print styles now force tables to a fixed 100%-width layout with wrapping cells, and long code blocks wrap instead of overflowing the page.
+
+## 1.7.3
+
+- Fixed the remaining close hang: with 1.7.1 the close handler ran to completion (geometry/session persisted) but the process could still linger as "未响应" — stuck in the WebView2 runtime's DLL detach during event-loop teardown, especially when the window was closed seconds after startup. All clean-exit paths (window close, app quit, quit-ack, save-then-close, last-tab-closed) now persist state, hide the window immediately, and exit the process directly without running WebView2 teardown.
+
+## 1.7.2
+
+- Fixed Mermaid diagrams exporting as source text instead of images when a label contains `<br/>`: mermaid puts raw HTML (a bare `<br>`) inside the SVG's `<foreignObject>` labels, which is not well-formed XML, so the browser refused to load the SVG for rasterization and the exporter silently kept the code block. The SVG is now normalized through a DOM round-trip (HTML parser + XMLSerializer) before PNG conversion, so complex flowcharts with line-break labels, subgraphs, and classDef styling export as high-resolution images.
+
+## 1.7.1
+
+- Fixed a hang ("未响应") when closing the window: a pending close with unsaved changes could be silently swallowed when the webview had nothing to save (Rust-side dirty flag vs. editor state mismatch), leaving the window unclosable. The webview now always answers a pending close (`quit-ack`), and a repeated close request while a save is in flight is logged instead of dead-ignored.
+- All native dialogs (open/save/export file pickers, message boxes) are now owned by the main window, so they can no longer open behind the WebView2 window while modally disabling it — a classic cause of apparent freezes.
+- Added a diagnostic log at `%LOCALAPPDATA%/md-preview/md-preview.log` (UTC timestamps, 1 MB rotation) covering startup, close/quit requests, save-as dialog show/cancel, save failures, and exits.
+
+## 1.7.0
+
+- Word export now renders Mermaid diagrams as real images: each ```` ```mermaid ```` block is rendered in the preview engine and embedded into the .docx as a 2x PNG (white background, centered, uncompressed); blocks that fail to render keep their code form.
+- Added Word template learning: if a `template.docx` sits next to the executable (or is pointed to by the `MD_PREVIEW_TEMPLATE` environment variable), Word exports adopt its Normal font and size, line spacing, first-line indent, heading sizes H1–H6, and page size/margins as the default style base. The Format Standardization mode keeps its explicit 宋体五号 spec.
+- Code blocks now keep their light-gray background in both default and Format Standardization export modes.
+
+## 1.6.0
+
+- Changed the tab-bar `+` and `Cmd/Ctrl+N` into instant untitled tabs: they open a clean, unsaved source editor immediately, live only in memory, and are excluded from session restore until saved.
+- Added a dedicated Save As toolbar button and `Cmd/Ctrl+Shift+S` shortcut, which saves the current document (including untitled tabs) to a new path without touching the original file.
+- Added Word (.docx) export with a toolbar popover: the default format mirrors the preview style (Microsoft YaHei 11 pt body, bold black YaHei headings H1 18 / H2 16 / H3 14 / H4 13 / H5 12 / H6 11 pt, 1.5 line spacing, 2-character first-line indent, light-gray inline code and code blocks, blue #1565C0 underlined clickable links, bulleted/numbered lists, full-border 100%-width tables with bold headers, left-bar block quotes, and centered images scaled to the page width).
+- Added an optional Format Standardization export mode that switches body text to SimSun 5号, removes bold/shading and full/half-width spaces, keeps table headers unshaded, and centers images without compression.
+- Added an optional Strip Heading Numbers export mode that removes `1.` / `1.1` / `1.1.1` / `一、` / `（一）` / `(1)` / `第一章` / `①`-style prefixes from headings while keeping heading levels intact for automatic numbering in Office.
+- Closing an unsaved untitled tab now offers Save / Discard / Cancel, and window close flushes pending untitled edits through the same save dialog flow.
+
 ## 1.5.0
 
 - Added a collapsible left outline sidebar that lists every chapter heading (H1–H6) of the current document, with click-to-jump navigation and scroll-spy highlighting of the section being read.

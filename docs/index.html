@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MD Preview — Lightweight Local Markdown Workbench</title>
-<meta name="description" content="Open local Markdown links in tabs, keep reading position between preview and source, inspect live character counts, and zoom the document without launching a full IDE.">
+<meta name="description" content="Open local Markdown in one tabbed window, keep relative images portable, and edit beside a live preview without launching a full IDE.">
 <meta name="keywords" content="markdown preview, markdown tabs, local markdown links, markdown character count, markdown zoom, yaml front matter, multi document markdown, markdown viewer, markdown editor, Finder markdown, session restore, ios markdown viewer, android markdown viewer, AI generated docs, Claude Code markdown, Codex markdown, Cursor markdown, Mermaid preview, KaTeX preview, lightweight markdown app, rust markdown, native markdown viewer, offline markdown, electron alternative, wry, pulldown-cmark">
 <meta name="author" content="vorojar">
 <meta name="robots" content="index, follow">
@@ -34,14 +34,14 @@
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "MD Preview",
-  "description": "Native cross-platform Markdown workbench with local document links, live character counts, content zoom, scroll continuity, New Markdown, multi-document tabs, reliable automatic save, offline Mermaid and KaTeX, search, and native print. Built with Rust and the system WebView, with no Electron.",
+  "description": "Native cross-platform Markdown workbench with portable local images, single-instance document tabs on Windows, split preview and source editing, reliable automatic save, offline Mermaid and KaTeX, search and replacement, and native print. Built with Rust and the system WebView, with no Electron.",
   "url": "https://vorojar.github.io/md-preview/",
   "downloadUrl": "https://github.com/vorojar/md-preview/releases",
   "installUrl": "https://apps.apple.com/cn/app/local-markdown-preview/id6779451523",
   "operatingSystem": "macOS, Windows, Linux, iOS, iPadOS, Android",
   "applicationCategory": "DeveloperApplication",
-  "softwareVersion": "1.4.0",
-  "fileSize": "5.1MB",
+  "softwareVersion": "1.9.9",
+  "fileSize": "6.59 MiB",
   "license": "https://opensource.org/licenses/MIT",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
   "author": { "@type": "Person", "name": "vorojar", "url": "https://github.com/vorojar" },
@@ -349,7 +349,7 @@ footer a { color: inherit; }
 
 <header class="hero">
   <div class="hero-icon" aria-hidden="true">#</div>
-  <div class="release-badge" data-en="New in v1.4 · Local links + reading tools" data-zh="v1.4 新功能 · 本地文档跳转 + 阅读工具"></div>
+  <div class="release-badge" data-en="New in v1.9.9 · Mermaid node editing and synchronized split view" data-zh="v1.9.9 新功能 · 流程图节点编辑 + 分栏同步"></div>
   <h1>MD Preview</h1>
   <p class="tagline" data-en="Follow local Markdown links in tabs, keep your reading position, inspect live counts, and zoom the document without launching a full IDE." data-zh="沿本地 Markdown 链接在标签间跳转，保留阅读位置、实时查看字数并缩放正文，不必启动完整 IDE。"></p>
   <div class="cta">
@@ -365,7 +365,7 @@ footer a { color: inherit; }
 
 <section class="stats">
   <div class="stat">
-    <div class="number">~5MB</div>
+    <div class="number">6.59 MiB</div>
     <div class="label" data-en="Binary size" data-zh="程序体积"></div>
   </div>
   <div class="stat">
@@ -386,12 +386,14 @@ footer a { color: inherit; }
   <h2 data-en="Your Markdown work stays together" data-zh="让相关 Markdown 一直待在一起"></h2>
   <p class="intro" data-en="Keep plans, READMEs, task notes, and generated reports open as tabs. Switch between them without opening another IDE, and continue from the same active document after a restart." data-zh="把计划、README、任务笔记和生成报告放在同一组标签里。不必再打开另一个 IDE，重启后还能从上次活动文档继续。"></p>
   <ul class="workflow-list">
-    <li data-en="Open several local Markdown and text files in one window; opening the same path simply activates its tab." data-zh="在一个窗口打开多份本地 Markdown 和文本文件；重复打开同一路径只会激活已有标签。"></li>
+    <li data-en="Open several local Markdown and text files in one window; later Windows launches reuse that process through bind-first, widely spaced local ports." data-zh="在一个窗口打开多份本地 Markdown 和文本文件；Windows 后续启动会复用该进程，单实例端口采用先绑定和分散候选避免等待。"></li>
     <li data-en="Resume tab order and the active document across launches without caching document bodies." data-zh="重启后恢复标签顺序和活动文档，但不缓存文档正文。"></li>
     <li data-en="Use the tab-bar + or Cmd/Ctrl+N to create Markdown beside the current document and start typing immediately." data-zh="使用标签栏 + 或 Cmd/Ctrl+N 在当前文档旁新建 Markdown，并立即开始输入。"></li>
-    <li data-en="Let edits autosave after a short pause, with a final save before preview, tab/window close, or quit." data-zh="输入停顿片刻即自动保存；预览、关闭标签/窗口或退出前还会强制保存。"></li>
+    <li data-en="Let edits autosave after a short pause; read-only save failures offer Save As, discard, or Cancel instead of trapping the window." data-zh="输入停顿片刻即自动保存；只读文件保存失败时可另存为、放弃或取消，不会卡在无法退出的循环。"></li>
     <li data-en="Follow relative or absolute links to local Markdown and text files; existing documents open or activate a tab." data-zh="点击相对或绝对的本地 Markdown / 文本链接；现有文档会打开或激活标签。"></li>
     <li data-en="Keep normalized reading progress between preview and source, with live counts and content-only zoom." data-zh="预览与源码切换时保留阅读进度，并提供实时字数统计和仅正文缩放。"></li>
+    <li data-en="Use Split View to keep the rendered preview on the left and autosaving Markdown source on the right." data-zh="使用左右分栏，让左侧渲染预览与右侧自动保存的 Markdown 源码同时可见。"></li>
+    <li data-en="Resolve standard Markdown images from the document folder, so copying the document and image tree together keeps it portable." data-zh="标准 Markdown 图片按文档目录解析；文档与图片目录按原结构一起复制即可保持可移植。"></li>
     <li data-en="Preview Mermaid, KaTeX, code, tables, and alerts offline, then print or export a clean PDF." data-zh="离线预览 Mermaid、KaTeX、代码、表格和提示块，再打印或导出干净 PDF。"></li>
   </ul>
 </section>
@@ -400,7 +402,7 @@ footer a { color: inherit; }
   <div class="feature">
     <div class="icon">&#9638;</div>
     <h3 data-en="Multi-document tabs" data-zh="多文档标签"></h3>
-    <p data-en="Open, switch, edit, and close several Markdown or text files without multiplying windows or losing context." data-zh="在同一窗口打开、切换、编辑和关闭多份 Markdown 或文本，不再堆窗口、丢上下文。"></p>
+    <p data-en="Open, switch, edit, and close several Markdown or text files without multiplying windows. Windows binds a widely spaced candidate first, and a later file launch joins the running window." data-zh="在同一窗口打开、切换、编辑和关闭多份 Markdown 或文本；Windows 会先绑定分散候选端口，后续打开文件直接加入当前窗口。"></p>
   </div>
   <div class="feature">
     <div class="icon">&#8635;</div>
@@ -415,12 +417,12 @@ footer a { color: inherit; }
   <div class="feature">
     <div class="icon">&#9889;</div>
     <h3 data-en="Instant startup" data-zh="秒开启动"></h3>
-    <p data-en="Opens in milliseconds. No bundled Chromium, no heavy runtime. Uses your system's native WebView." data-zh="毫秒级启动。不打包 Chromium，不依赖沉重运行时。直接使用系统原生 WebView。"></p>
+    <p data-en="Opens without the old reserved-port timeout path. No bundled Chromium or heavy runtime; the UI uses the system WebView." data-zh="启动时不再进入旧版的保留端口超时路径。不打包 Chromium 或沉重运行时，界面直接使用系统 WebView。"></p>
   </div>
   <div class="feature">
     <div class="icon">&#128269;</div>
     <h3 data-en="Reliable autosave" data-zh="可靠自动保存"></h3>
-    <p data-en="Edits save after a short pause and flush before switching, closing, or quitting. A failed save keeps the tab and source intact." data-zh="输入停顿片刻即保存，切换、关闭或退出前强制写盘；失败时标签和源码都不会丢。"></p>
+    <p data-en="Edits save after a short pause and flush before switching, closing, or quitting. Read-only failures keep the source and offer Save As, discard, or Cancel." data-zh="输入停顿片刻即保存，切换、关闭或退出前强制写盘；只读失败时保留源码，并提供另存为、放弃或取消。"></p>
   </div>
   <div class="feature">
     <div class="icon">&#128279;</div>
@@ -434,13 +436,13 @@ footer a { color: inherit; }
   </div>
   <div class="feature">
     <div class="icon">&#128269;</div>
-    <h3 data-en="Find and recent files" data-zh="搜索和最近文件"></h3>
-    <p data-en="The empty window has Open File and local recent files. Cmd/Ctrl+F searches the rendered preview without turning the app into a heavy editor." data-zh="空白窗口有打开文件和本机最近文件。Cmd/Ctrl+F 在渲染预览里搜索，不把应用做重。"></p>
+    <h3 data-en="Find, replace, and recent files" data-zh="查找、替换和最近文件"></h3>
+    <p data-en="The empty window has Open File and local recent files. Cmd/Ctrl+F searches the rendered preview; Ctrl+H enters Markdown source mode for literal Replace and Replace All." data-zh="空白窗口有打开文件和本机最近文件。Cmd/Ctrl+F 在渲染预览里查找；Ctrl+H 进入 Markdown 源码，支持字面量单项替换和全部替换。"></p>
   </div>
   <div class="feature">
     <div class="icon">&#127912;</div>
     <h3 data-en="Syntax, math & diagrams" data-zh="代码、公式和图表"></h3>
-    <p data-en="40+ highlight.js languages, KaTeX formulas, and Mermaid diagrams. Fully offline — no network needed." data-zh="支持 40+ 语言代码高亮、KaTeX 公式和 Mermaid 图表。完全离线，无需网络。"></p>
+    <p data-en="40+ highlight.js languages, KaTeX formulas, and Mermaid diagrams. Zoom a diagram, then hold Space and left-drag to pan. Fully offline." data-zh="支持 40+ 语言代码高亮、KaTeX 公式和 Mermaid 图表；放大后按住空格键并用鼠标左键拖动到局部位置。完全离线。"></p>
   </div>
   <div class="feature">
     <div class="icon">&#127763;</div>
@@ -459,13 +461,13 @@ footer a { color: inherit; }
   </div>
   <div class="feature">
     <div class="icon">&#9998;</div>
-    <h3 data-en="Edit and print in place" data-zh="原地编辑和打印"></h3>
-    <p data-en="Cmd/Ctrl+E toggles source edit, Cmd/Ctrl+S saves, and Cmd/Ctrl+W closes the active tab. Native print is ready for PDF export." data-zh="Cmd/Ctrl+E 切换源码编辑，Cmd/Ctrl+S 保存，Cmd/Ctrl+W 关闭当前标签；原生打印可直接导出 PDF。"></p>
+    <h3 data-en="Split edit and preview" data-zh="左右分栏编辑预览"></h3>
+    <p data-en="Keep live preview on the left and autosaving Markdown source on the right. Source replacement and untitled drafts work in the same view." data-zh="左侧保持实时预览，右侧编辑并自动保存 Markdown；源码替换和未命名草稿也可在同一分栏中使用。"></p>
   </div>
   <div class="feature">
     <div class="icon">&#128279;</div>
-    <h3 data-en="Plays nice with your OS" data-zh="尊重操作系统"></h3>
-    <p data-en="Links open in your default browser. File association on Windows. Window position and size remembered between sessions. macOS and Windows updates are verified in-app." data-zh="链接走系统默认浏览器。Windows 文件关联。窗口位置/大小退出时记住。macOS 和 Windows 更新都在应用内校验。"></p>
+    <h3 data-en="Portable paths and images" data-zh="可移植路径与图片"></h3>
+    <p data-en="Images resolve from the opened Markdown file. Windows file association now validates its command, removes Shell-incompatible verbatim prefixes, and refreshes a stable compatibility alias; a fixed local EXE path remains recommended." data-zh="图片按已打开的 Markdown 目录解析；Windows 文件关联会校验命令、移除 Shell 不支持的 verbatim 前缀并刷新稳定兼容别名，仍建议使用固定的本机 EXE 位置。"></p>
   </div>
 </section>
 
@@ -479,7 +481,7 @@ footer a { color: inherit; }
     </tr>
     <tr class="highlight">
       <td data-en="Binary size" data-zh="程序体积"></td>
-      <td><strong>~5.1 MB</strong></td>
+      <td><strong>6.59 MiB</strong></td>
       <td>150+ MB</td>
     </tr>
     <tr class="highlight">

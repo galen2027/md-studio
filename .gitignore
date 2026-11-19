@@ -1,4 +1,11 @@
 /target
+/target-crt-static
+# Keep release notes, checksums and licenses in Git; retain binaries locally.
+/release/**/*.exe
+/release/**/*.zip
+# Keep release notes/checksums in Git; keep compiled packages locally.
+/release/**/*.exe
+/release/**/*.zip
 .env.mobile-release
 mobile/android/signing/
 mobile/ios/*.xcodeproj

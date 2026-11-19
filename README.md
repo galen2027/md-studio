@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20iOS%20%7C%20Android-lightgrey)](https://github.com/vorojar/md-preview/releases)
 [![App Store](https://img.shields.io/badge/App%20Store-Local%20Markdown%20Preview-blue?logo=appstore)](https://apps.apple.com/cn/app/local-markdown-preview/id6779451523)
-[![Binary size](https://img.shields.io/badge/binary-~5MB-green)](https://github.com/vorojar/md-preview/releases)
+[![Binary size](https://img.shields.io/badge/binary-~6.59%20MiB-green)](https://github.com/vorojar/md-preview/releases)
 
 > Multiple Markdown files, one lightweight window. Follow local document links, inspect counts, zoom the page, and edit with automatic save—without launching a whole IDE.
 
@@ -46,12 +46,22 @@ Get the latest build from [GitHub Releases](https://github.com/vorojar/md-previe
 | Platform | Package | Notes |
 |---|---|---|
 | macOS | `MD-Preview-macOS-universal.dmg` | Universal app for Apple Silicon and Intel. Releases are signed and notarized. |
-| Windows | `MD-Preview-windows-x64.exe` | Single-file app. The in-app updater downloads the next exe, verifies its SHA-256 digest, replaces itself, and relaunches. |
+| Windows | `MD-Preview-windows-x64.exe` | Portable x64 single-file app with the MSVC CRT linked statically. The in-app updater downloads the next exe, verifies its SHA-256 digest, replaces itself, and relaunches. |
 | Linux | `MD-Preview-linux-x64.tar.gz` | Requires the system WebKitGTK runtime. |
 | iOS / iPadOS | [Local Markdown Preview on the App Store](https://apps.apple.com/cn/app/local-markdown-preview/id6779451523) | Native iPhone and iPad viewer for opening Markdown from Files and the iOS share sheet. |
 | Android | `MD-Preview-Android.apk` | Native Android viewer for opening Markdown files from Files, WeChat, WeCom, and share sheets. |
 
 Android builds are published as separate mobile releases, for example [mobile-android-v1.0.7](https://github.com/vorojar/md-preview/releases/tag/mobile-android-v1.0.7). The iOS build is now available on the App Store as [Local Markdown Preview](https://apps.apple.com/cn/app/local-markdown-preview/id6779451523).
+
+### Windows portability and export dependencies
+
+The Windows x64 release links the MSVC C runtime statically, so the receiving computer does not need a separate Visual C++ Redistributable. The UI still requires the Microsoft Edge WebView2 Runtime; it is normally present on fully updated Windows 11 systems, and MD Preview shows a native download prompt and writes a diagnostic log if WebView2 is missing. Mermaid, KaTeX, syntax highlighting, and icons are embedded in the EXE.
+
+DOCX generation does not require Microsoft Word. Word, WPS, or LibreOffice is only needed to open the generated document. PDF export is the one optional path that requires an installed Microsoft Edge or Google Chrome browser. Windows builds are currently unsigned, so SmartScreen may show an unknown-publisher warning; verify the published SHA-256 value before running the EXE.
+
+Version 1.9.9 combines offline WYSIWYG text editing with independent, semantically synchronized split panes. Disk snapshots prevent delayed self-save notifications from producing false conflicts; real external conflicts still protect local edits. In the Mermaid lightbox, choose Edit nodes to click flowchart/graph nodes, change labels, delete nodes and incident edges, or undo diagram changes. Original SVG, 3x PNG, zoom and Space-drag remain available. Source patches are backed up, parsed, checked and rendered before application. Unsupported syntax and indexed edge styles require source editing; node dragging is outside this version. Markdown formatting may normalize after rich edits; undo history resets across mode/tab changes. See [module design](docs/预览编辑模块设计_v1.2_261119.md).
+
+Version 1.9.6 adds Space + left-button drag panning for large Mermaid diagrams, replaces the read-only save-failure close loop with Save As / discard / cancel recovery, and repairs Windows Chinese IME focus on first edit and after returning to the app. The most reliable deployment remains a real EXE in a stable local directory, launched once before it is selected as the default app.
 
 You can also build from source:
 
@@ -80,7 +90,9 @@ md-preview README.md plan.md task.md
 md-preview
 ```
 
-MD Preview accepts `.md` and `.txt` files through drag and drop, the open dialog, recent files, or the command line. Desktop documents open as tabs; opening the same path activates its existing tab. Use the tab-bar `+` or `Cmd/Ctrl+N` to create a Markdown file beside the current document and enter source edit immediately. Tab order and the active document are restored across launches, while inactive content stays on disk until selected. Relative images and supported local document links resolve from the current Markdown file's directory, so documentation folders render and navigate naturally.
+MD Preview accepts `.md` and `.txt` files through drag and drop, the open dialog, recent files, or the command line. Desktop documents open as tabs; opening or double-clicking another file while MD Preview is running reuses the existing Windows process and adds or activates its tab. Windows single-instance startup binds a widely spaced candidate first and probes only conflicting candidates with a bounded timeout, avoiding the previous multi-second timeout path. Use the tab-bar `+` or `Cmd/Ctrl+N` to create a Markdown file beside the current document and enter source edit immediately. Tab order and the active document are restored across launches, while inactive content stays on disk until selected. Standard Markdown image references and supported local document links resolve from the opened Markdown file's directory, never from the EXE directory.
+
+For a folder to remain portable across computers, copy the Markdown file and its image folders together and keep their relative layout. Local absolute paths and `file:` URLs can be displayed on the machine where they exist, but drive-specific paths are not portable to another computer.
 
 If a tab's file is moved or deleted, the tab remains visible instead of disappearing silently. Select it to locate the file again or close the tab.
 
@@ -96,11 +108,11 @@ On iPhone and iPad, Local Markdown Preview opens Markdown and plain-text files f
 
 | Feature | What it means |
 |---|---|
-| Desktop tabs | Open multiple Markdown or text documents in one window; duplicate paths activate the existing tab. |
+| Desktop tabs | Open multiple Markdown or text documents in one window; on Windows, later file launches reuse the running process, duplicate paths activate the existing tab, and widely spaced bind-first candidates keep startup responsive. |
 | Session restore | Restore tab order and the active document after restart without caching inactive document bodies. |
 | Missing files | Moved or deleted files remain as explicit missing tabs with Locate and Close actions. |
 | Finder workflow | On macOS, create Markdown from Finder and start editing it immediately in MD Preview. |
-| Reliable autosave | Source edits save after a short pause and are flushed before preview, tab switches, tab/window close, or quit; save failures keep the tab and text intact. |
+| Reliable autosave | Source edits save after a short pause and are flushed before preview, tab switches, tab/window close, or quit; read-only save failures offer Save As, discard, or Cancel while keeping the source intact. |
 | Local document links | Relative or absolute links to existing Markdown and text files open or activate a tab; invalid local targets do not replace the preview. |
 | Front matter | YAML metadata at the start of a document stays readable as metadata instead of collapsing into a heading. |
 | Live statistics | The tab bar shows non-whitespace and total character counts and updates while editing. |
@@ -110,13 +122,17 @@ On iPhone and iPad, Local Markdown Preview opens Markdown and plain-text files f
 | Mobile open | iOS opens Markdown from Files and the share sheet; Android can open Markdown from Files, WeChat, WeCom, and Android share sheets. |
 | Drag and drop | Drop a Markdown file into the window and it opens immediately. |
 | CLI open | `md-preview path/to/file.md` opens directly from a shell. |
-| Find in preview | `Cmd/Ctrl+F` opens a compact search bar for the rendered document. |
+| Find and replace | `Cmd/Ctrl+F` searches the rendered preview; `Ctrl+H` enters Markdown source mode with Replace and Replace All. |
 | Live reload | External edits refresh the rendered document automatically. |
-| Inline source edit | `Cmd/Ctrl+E` switches to source mode; edits autosave, while `Cmd/Ctrl+S` forces an immediate save. |
+| Inline source edit | `Cmd/Ctrl+E` switches to source mode; edits autosave, while `Cmd/Ctrl+S` forces an immediate save. Windows CJK IME composition works on first focus and after returning to the window. |
+| Split view | A toolbar button shows the rendered preview on the left and Markdown source on the right, with the same autosave and replacement behavior. |
 | Native print | `Cmd/Ctrl+P` opens the platform print dialog and prints only the preview. |
 | Syntax highlighting | highlight.js is embedded offline and injected after first paint. |
 | Math | KaTeX renders `$...$`, `$$...$$`, `\(...\)`, and `\[...\]` on demand. |
-| Diagrams | Mermaid fenced blocks render locally when the document actually uses them. |
+| Diagrams | Mermaid fenced blocks render locally when the document actually uses them; after zooming the lightbox, hold Space and left-drag to pan to a local area. |
+| Diagram export | Lightbox download distinguishes the vector SVG original from the 3× PNG; Word export uses a 300-PPI PNG compatibility fallback with stable layout size. |
+| DOCX tables | Word export uses template-aware, content-weighted fixed column grids with six explicit solid table-level borders, cell padding, numeric alignment, repeatable headers, and preserved Markdown/HTML line breaks instead of unpredictable auto-fit. |
+| Local images | Document-relative, parent-relative, Windows-backslash, local absolute, and local `file:` JPG/PNG/GIF/WebP/SVG/BMP/ICO/AVIF references stream through a scoped read-only asset transport; UNC and remote `file:` shares are rejected. |
 | GitHub Alerts | `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, and `[!CAUTION]` blockquotes render as alert callouts. |
 | Highlights | `==highlight==` renders as marked text for notes and AI-generated docs. |
 | Dark mode | Follows the system color scheme across macOS, Windows, and Linux. |
@@ -132,6 +148,7 @@ On iPhone and iPad, Local Markdown Preview opens Markdown and plain-text files f
 | `Cmd/Ctrl + N` | Create a Markdown file and enter source edit |
 | `Cmd/Ctrl + O` | Open file |
 | `Cmd/Ctrl + F` | Find in preview |
+| `Ctrl + H` | Enter source mode and open find/replace |
 | `Cmd/Ctrl + E` | Toggle preview/source edit |
 | `Cmd/Ctrl + S` | Save in source edit mode |
 | `Cmd/Ctrl + P` | Print preview |
@@ -140,6 +157,7 @@ On iPhone and iPad, Local Markdown Preview opens Markdown and plain-text files f
 | `Cmd/Ctrl -` | Zoom document content out |
 | `Cmd/Ctrl 0` | Reset document content zoom |
 | `Esc` | Leave source edit mode and save if needed |
+| `Space + left mouse drag` | Pan a zoomed Mermaid diagram in the lightbox |
 
 ## Markdown Support
 
@@ -151,7 +169,7 @@ MD Preview uses `pulldown-cmark` for the base Markdown pass, then enhances the r
 - Offline code highlighting for 40+ languages, including Delphi/Pascal
 - Offline KaTeX math rendering with safeguards so Markdown emphasis does not break formulas
 - Offline Mermaid rendering for fenced ```` ```mermaid ```` blocks
-- Relative image paths through a per-file `<base>` URL
+- Standard Markdown image references resolved from the opened document directory and streamed through a scoped read-only transport
 - Relative and absolute links to supported local Markdown or text documents
 - Readable YAML front matter delimited by `---` or `...`
 - Print CSS that removes app controls from printed output
@@ -201,7 +219,7 @@ WEBKIT_DISABLE_COMPOSITING_MODE=1 md-preview your-file.md
 
 **Windows cannot set MD Preview as the default app automatically**
 
-Windows does not allow apps to silently take over file associations. MD Preview registers itself in the "Open with" list; choose it from Explorer or Windows Settings.
+Windows does not allow apps to silently take over file associations. MD Preview registers itself in the "Open with" list; choose it from Explorer or Windows Settings. Version 1.9.5 validates the registry command, removes unsupported Windows verbatim-path prefixes, and registers both the current executable name and a compatibility alias. If an older default points to a broken symlink or hard link, copy the EXE to a stable local directory, launch it once there, and select it again under "Open with".
 
 **A formula or diagram shows as text**
 

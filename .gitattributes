@@ -1,1 +1,6 @@
 assets/mermaid/mermaid.min.js binary
+assets/editor/vditor/** binary
+*.sh text eol=lf
+# Archive upstream license bytes and retain Markdown hard-break whitespace.
+release/**/licenses/* binary
+*.md whitespace=-trailing-space,-blank-at-eof

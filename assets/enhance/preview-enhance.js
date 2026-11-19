@@ -197,11 +197,295 @@
       var source = code.textContent;
       var container = document.createElement('div');
       container.className = 'mdp-mermaid';
+      container.dataset.mdpDiagramSource = source;
+      ['data-source-start', 'data-source-end'].forEach(function(name) {
+        if (pre.hasAttribute(name)) container.setAttribute(name, pre.getAttribute(name));
+      });
       container.textContent = source;
       pre.parentNode.replaceChild(container, pre);
       renderMermaid(container, source);
     });
   }
+
+  // ---- Mermaid lightbox --------------------------------------------------
+  // Large diagrams are shrunk to fit the column and become unreadable. Click
+  // one to open a viewer that scales the *vector* SVG (crisp at any zoom),
+  // with zoom controls and original-image download (SVG / 3x PNG).
+  var lightbox = null;
+  var lightboxSvg = null;
+  var lightboxNatural = { w: 0, h: 0 };
+  var lightboxScale = 1;
+  var lightboxFit = 1;
+  var lightboxSpaceHeld = false;
+  var lightboxPan = null;
+  var lightboxSuppressClick = false;
+
+  function lightboxLabels() {
+    return window.__mdPreviewLightboxLabels || {
+      zoomOut: 'Zoom out', zoomIn: 'Zoom in', fit: 'Fit', pan: 'Hold Space and drag',
+      png: 'PNG', svg: 'SVG', close: 'Close'
+    };
+  }
+
+  function ensureLightbox() {
+    if (lightbox) return lightbox;
+    var L = lightboxLabels();
+    lightbox = document.createElement('div');
+    lightbox.className = 'mdp-lightbox';
+    lightbox.innerHTML =
+      '<div class="mdp-lightbox-toolbar">' +
+      '<button type="button" data-lb="out" title="' + L.zoomOut + '" aria-label="' + L.zoomOut + '">−</button>' +
+      '<span class="mdp-lightbox-scale">100%</span>' +
+      '<button type="button" data-lb="in" title="' + L.zoomIn + '" aria-label="' + L.zoomIn + '">+</button>' +
+      '<button type="button" data-lb="fit">' + L.fit + '</button>' +
+      '<span class="mdp-lightbox-pan-hint">' + L.pan + '</span>' +
+      '<span class="mdp-lightbox-spacer"></span>' +
+      '<button type="button" data-lb="png">' + L.png + '</button>' +
+      '<button type="button" data-lb="svg">' + L.svg + '</button>' +
+      '<button type="button" data-lb="close" title="' + L.close + '" aria-label="' + L.close + '">×</button>' +
+      '</div>' +
+      '<div class="mdp-lightbox-body"><div class="mdp-lightbox-canvas"></div></div>';
+    document.body.appendChild(lightbox);
+    lightbox.addEventListener('click', function(e) {
+      if (lightboxSuppressClick) {
+        lightboxSuppressClick = false;
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      var btn = e.target && e.target.closest ? e.target.closest('[data-lb]') : null;
+      if (btn) {
+        lightboxAction(btn.getAttribute('data-lb'));
+        return;
+      }
+      if (e.target === lightbox || e.target.classList.contains('mdp-lightbox-body')) {
+        closeLightbox();
+      }
+    });
+    lightbox.addEventListener('wheel', function(e) {
+      if (e.target.closest('.mdp-diagram-editor')) return;
+      if (!lightboxSvg) return;
+      e.preventDefault();
+      applyLightboxScale(lightboxScale * (e.deltaY < 0 ? 1.12 : 1 / 1.12));
+    }, { passive: false });
+    var body = lightbox.querySelector('.mdp-lightbox-body');
+    body.addEventListener('pointerdown', function(e) {
+      if (!lightboxSpaceHeld || e.button !== 0 || !lightboxSvg) return;
+      lightboxPan = {
+        id: e.pointerId,
+        x: e.clientX,
+        y: e.clientY,
+        left: body.scrollLeft,
+        top: body.scrollTop,
+        moved: false,
+      };
+      body.classList.add('panning');
+      body.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    body.addEventListener('pointermove', function(e) {
+      if (!lightboxPan || lightboxPan.id !== e.pointerId) return;
+      var dx = e.clientX - lightboxPan.x;
+      var dy = e.clientY - lightboxPan.y;
+      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) lightboxPan.moved = true;
+      body.scrollLeft = lightboxPan.left - dx;
+      body.scrollTop = lightboxPan.top - dy;
+      e.preventDefault();
+    });
+    function stopLightboxPan(e) {
+      if (!lightboxPan || lightboxPan.id !== e.pointerId) return;
+      lightboxSuppressClick = lightboxPan.moved;
+      lightboxPan = null;
+      body.classList.remove('panning');
+      if (body.hasPointerCapture(e.pointerId)) body.releasePointerCapture(e.pointerId);
+      e.preventDefault();
+    }
+    body.addEventListener('pointerup', stopLightboxPan);
+    body.addEventListener('pointercancel', stopLightboxPan);
+    return lightbox;
+  }
+
+  function openLightbox(container, refresh) {
+    var svg = container.querySelector('svg');
+    if (!svg) return;
+    ensureLightbox();
+    var canvas = lightbox.querySelector('.mdp-lightbox-canvas');
+    canvas.textContent = '';
+    lightboxSvg = svg.cloneNode(true);
+    canvas.appendChild(lightboxSvg);
+    var w = 0, h = 0;
+    var vb = svg.getAttribute('viewBox') || '';
+    if (vb) {
+      var p = vb.trim().split(/[\s,]+/);
+      w = parseFloat(p[2]);
+      h = parseFloat(p[3]);
+    }
+    if (!w || !h) {
+      w = svg.clientWidth || 800;
+      h = svg.clientHeight || 600;
+    }
+    lightboxNatural = { w: w, h: h };
+    lightbox.classList.add('open');
+    if (!refresh) document.dispatchEvent(new CustomEvent('mdpreview-diagram-open', { detail: { container: container, lightbox: lightbox } }));
+    // Big diagrams open fitted; small ones open at 100% (Codex-style).
+    requestAnimationFrame(function() {
+      fitLightbox();
+    });
+  }
+
+  function fitLightbox() {
+    if (!lightboxSvg) return;
+    var body = lightbox.querySelector('.mdp-lightbox-body'), style = getComputedStyle(body);
+    var availW = Math.max(80, body.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 28);
+    var availH = Math.max(80, body.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - 28);
+    lightboxFit = Math.min(1, availW / lightboxNatural.w, availH / lightboxNatural.h);
+    applyLightboxScale(lightboxFit);
+  }
+
+  function applyLightboxScale(scale) {
+    if (!lightboxSvg) return;
+    lightboxScale = Math.max(0.05, Math.min(8, scale));
+    lightboxSvg.setAttribute('width', String(Math.round(lightboxNatural.w * lightboxScale)));
+    lightboxSvg.setAttribute('height', String(Math.round(lightboxNatural.h * lightboxScale)));
+    lightboxSvg.style.maxWidth = 'none';
+    lightboxSvg.style.height = 'auto';
+    lightbox.querySelector('.mdp-lightbox-scale').textContent = Math.round(lightboxScale * 100) + '%';
+  }
+
+  function prepareSvgForExport(source, width, height) {
+    try {
+      var svg;
+      if (typeof source === 'string') {
+        var host = document.createElement('div');
+        host.innerHTML = source;
+        svg = host.querySelector('svg');
+      } else if (source && source.cloneNode) {
+        svg = source.cloneNode(true);
+      }
+      if (!svg) return '';
+      svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      svg.setAttribute('width', String(Math.max(1, Math.round(width))));
+      svg.setAttribute('height', String(Math.max(1, Math.round(height))));
+      svg.style.width = Math.max(1, Math.round(width)) + 'px';
+      svg.style.height = Math.max(1, Math.round(height)) + 'px';
+      svg.style.maxWidth = 'none';
+      svg.style.maxHeight = 'none';
+      // DOM + XML serialization normalizes foreignObject HTML (<br> -> <br/>).
+      return new XMLSerializer().serializeToString(svg);
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function serializedLightboxSvg() {
+    if (!lightboxSvg) return '';
+    // Export at the SVG's natural dimensions, independent of current viewer zoom.
+    return prepareSvgForExport(lightboxSvg, lightboxNatural.w, lightboxNatural.h);
+  }
+
+  function rasterizeLightboxSvg() {
+    return new Promise(function(resolve) {
+      var scale = 3; // 3x raster keeps the download crisp on hi-dpi screens
+      var w = lightboxNatural.w, h = lightboxNatural.h;
+      var targetW = Math.max(1, Math.ceil(w * scale));
+      var targetH = Math.max(1, Math.ceil(h * scale));
+      var text = prepareSvgForExport(lightboxSvg, targetW, targetH);
+      if (!text || !w || !h || targetW > 16000 || targetH > 16000 || targetW * targetH > 32000000) {
+        resolve(null);
+        return;
+      }
+      var img = new Image();
+      img.onload = function() {
+        try {
+          var canvas = document.createElement('canvas');
+          canvas.width = targetW;
+          canvas.height = targetH;
+          var ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/png'));
+        } catch (_) {
+          resolve(null);
+        }
+      };
+      img.onerror = function() { resolve(null); };
+      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(text)));
+    });
+  }
+
+  function lightboxAction(action) {
+    if (action === 'close') { closeLightbox(); return; }
+    if (action === 'in') { applyLightboxScale(lightboxScale * 1.25); return; }
+    if (action === 'out') { applyLightboxScale(lightboxScale / 1.25); return; }
+    if (action === 'fit') { fitLightbox(); return; }
+    if (action === 'svg' && window.ipc && window.ipc.postMessage) {
+      window.ipc.postMessage('download-svg\n' + serializedLightboxSvg());
+      return;
+    }
+    if (action === 'png' && window.ipc && window.ipc.postMessage) {
+      rasterizeLightboxSvg().then(function(dataUrl) {
+        if (dataUrl) window.ipc.postMessage('download-png\n' + dataUrl);
+      });
+    }
+  }
+
+  function closeLightbox() {
+    lightboxSpaceHeld = false;
+    lightboxPan = null;
+    if (lightbox) {
+      lightbox.classList.remove('open', 'pan-ready');
+      var body = lightbox.querySelector('.mdp-lightbox-body');
+      if (body) body.classList.remove('panning');
+    }
+  }
+
+  // Shared by the Word exporter and the lightbox regression verifier.
+  window.__mdPreviewPrepareSvgForExport = prepareSvgForExport;
+  window.__mdPreviewOpenDiagram = openLightbox;
+  window.__mdPreviewRefreshDiagram = function(container) { openLightbox(container, true); };
+  window.__mdPreviewFitDiagram = fitLightbox;
+  window.addEventListener('resize', function() { if (lightbox && lightbox.classList.contains('open')) fitLightbox(); });
+
+  var lightboxBound = false;
+
+  function bindLightbox() {
+    if (lightboxBound) return;
+    lightboxBound = true;
+    document.addEventListener('click', function(e) {
+      var box = e.target && e.target.closest ? e.target.closest('.mdp-mermaid') : null;
+      if (box && box.querySelector('svg')) openLightbox(box);
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.isComposing || e.keyCode === 229) return;
+      if (e.code === 'Space' && lightbox && lightbox.classList.contains('open') &&
+          !e.ctrlKey && !e.metaKey && !e.altKey && !e.target.closest('input,textarea,select,[contenteditable="true"]')) {
+        lightboxSpaceHeld = true;
+        lightbox.classList.add('pan-ready');
+        e.preventDefault();
+        return;
+      }
+      if (e.key === 'Escape' && lightbox && lightbox.classList.contains('open')) {
+        e.stopPropagation();
+        closeLightbox();
+      }
+    }, true);
+    document.addEventListener('keyup', function(e) {
+      if (e.code !== 'Space') return;
+      lightboxSpaceHeld = false;
+      if (lightbox) lightbox.classList.remove('pan-ready');
+    }, true);
+    window.addEventListener('blur', function() {
+      lightboxSpaceHeld = false;
+      lightboxPan = null;
+      if (lightbox) {
+        lightbox.classList.remove('pan-ready');
+        var body = lightbox.querySelector('.mdp-lightbox-body');
+        if (body) body.classList.remove('panning');
+      }
+    });
+  }
+
 
   function enhanceTables(root) {
     var tables = root.querySelectorAll('table');
@@ -420,6 +704,7 @@
     var root = document.getElementById('preview');
     if (!root) return;
     bindAnchorNavigation();
+    bindLightbox();
     idle(function() {
       enhanceTables(root);
       enhanceAlerts(root);

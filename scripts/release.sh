@@ -56,6 +56,12 @@ require_clean_tracked_tree() {
     git status --short >&2
     exit 4
   fi
+
+  if [ -n "$(git ls-files --others --exclude-standard)" ]; then
+    echo "error: untracked files are present; add, commit, or ignore them before releasing" >&2
+    git status --short >&2
+    exit 4
+  fi
 }
 
 require_master_branch() {
@@ -124,6 +130,7 @@ require_release_assets() {
     MD-Preview-linux-x64.tar.gz
     MD-Preview-macOS-universal.dmg
     MD-Preview-windows-x64.exe
+    MD-Preview-windows-x64.exe.sha256
   )
   local assets
   assets="$(gh release view "$TAG" -R "$REPO" --json assets --jq '.assets[].name')"
@@ -134,6 +141,11 @@ require_release_assets() {
       exit 9
     fi
   done
+  if ! grep -Eq "^(《MD Preview 发布部署方案》|MD Preview 发布部署方案)_v${VERSION}_[0-9]{6}\.md$" <<<"$assets"; then
+    echo "error: Release $TAG missing versioned deployment guide" >&2
+    echo "$assets" >&2
+    exit 9
+  fi
 }
 
 verify_signed_outputs() {

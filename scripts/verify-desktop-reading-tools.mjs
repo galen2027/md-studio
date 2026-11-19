@@ -1,11 +1,12 @@
 import { createRequire } from 'node:module';
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 
-const root = resolve(new URL('..', import.meta.url).pathname);
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const mainRs = await readFile(resolve(root, 'src/main.rs'), 'utf8');
 const marker = 'var ICON_EDIT';
 const markerIndex = mainRs.indexOf(marker);
@@ -18,10 +19,14 @@ const desktopScript = mainRs
   .slice(scriptStart + '<script>'.length, scriptEnd)
   .replaceAll('{{', '{')
   .replaceAll('}}', '}')
+  .replaceAll('{replace_done_js}', '{count} replaced')
   .replaceAll('{stat_words_js}', '字')
-  .replaceAll('{stat_chars_js}', '字符');
+  .replaceAll('{stat_chars_js}', '字符')
+  .replaceAll('{windows_ime_focus_fix}', 'true');
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(process.env.MD_PREVIEW_TEST_BROWSER ? {
+  executablePath: process.env.MD_PREVIEW_TEST_BROWSER,
+} : {});
 const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
 await page.route('https://md-preview.test/**', (route) => route.fulfill({
   contentType: 'text/html',
@@ -41,6 +46,9 @@ await page.setContent(`<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
+    <base id="base-href">
+    <style id="hljs-light"></style>
+    <style id="hljs-dark"></style>
     <style>
       :root { --content-scale: 1; }
       body { margin: 0; font: 15px/1.6 system-ui, sans-serif; }
@@ -55,6 +63,12 @@ await page.setContent(`<!doctype html>
       }
       body.editing #preview { display: none; }
       body.editing #editor { display: block; }
+      body.split-view #app {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+      body.split-view #preview,
+      body.split-view #editor { display: block; min-width: 0; box-sizing: border-box; }
       .zoom-popover { display: none; }
       .zoom-control.open .zoom-popover { display: flex; }
       .toolbar { position: fixed; top: 0; right: 0; z-index: 10; }
@@ -66,12 +80,17 @@ await page.setContent(`<!doctype html>
       <div id="tabs"></div>
       <div id="doc-stats"></div>
       <button id="tab-open"></button>
+      <button id="tab-about"></button>
     </div>
     <div class="toolbar">
       <button id="btn-open"></button>
       <button id="btn-search"></button>
       <button id="btn-toggle"></button>
+      <button id="btn-split"></button>
       <button id="btn-print"></button>
+      <button id="btn-toc"></button>
+      <button id="btn-save-as"></button>
+      <button id="btn-word"></button>
       <div id="zoom-control" class="zoom-control">
         <button id="btn-zoom"></button>
         <div class="zoom-popover">
@@ -82,12 +101,24 @@ await page.setContent(`<!doctype html>
       </div>
       <button id="btn-update" hidden></button>
     </div>
+    <div id="print-control"><button id="print-direct"></button><button id="pdf-export"></button></div>
+    <div id="word-control"><input id="word-standardize" type="checkbox"><input id="word-strip" type="checkbox"><button id="word-export"></button></div>
+    <aside id="toc-panel"><nav id="toc"></nav></aside>
+    <div id="tab-menu"><button id="tab-menu-reveal"></button></div>
+    <div id="about-popover"></div>
     <div class="findbar">
-      <input id="find-input">
-      <span id="find-state"></span>
-      <button id="find-prev"></button>
-      <button id="find-next"></button>
-      <button id="find-close"></button>
+      <div class="find-row">
+        <input id="find-input">
+        <span id="find-state"></span>
+        <button id="find-prev"></button>
+        <button id="find-next"></button>
+        <button id="find-close"></button>
+      </div>
+      <div class="replace-row">
+        <input id="replace-input">
+        <button id="replace-one"></button>
+        <button id="replace-all"></button>
+      </div>
     </div>
     <div id="app">
       <div id="preview">${previewBlocks}</div>
@@ -128,6 +159,53 @@ if (result.stats !== '2 字 · 3 字符' || !result.dirty) {
   throw new Error(`live stats failed: ${JSON.stringify(result)}`);
 }
 await page.locator('#btn-toggle').click();
+
+await page.evaluate(() => window.__markSaved('你 好'));
+await page.evaluate(() => { window.__messages = []; });
+await page.locator('#btn-split').click();
+result = await page.evaluate(() => {
+  const preview = document.getElementById('preview').getBoundingClientRect();
+  const editor = document.getElementById('editor').getBoundingClientRect();
+  return {
+    split: document.body.classList.contains('split-view'),
+    editing: document.body.classList.contains('editing'),
+    previewDisplay: getComputedStyle(document.getElementById('preview')).display,
+    editorDisplay: getComputedStyle(document.getElementById('editor')).display,
+    previewLeft: preview.left,
+    previewRight: preview.right,
+    editorLeft: editor.left,
+    editorRight: editor.right,
+    pressed: document.getElementById('btn-split').getAttribute('aria-pressed'),
+  };
+});
+if (!result.split || result.editing || result.previewDisplay === 'none' ||
+    result.editorDisplay === 'none' || result.previewRight > result.editorLeft + 1 ||
+    result.previewLeft >= result.editorLeft || result.editorRight > 901 || result.pressed !== 'true') {
+  throw new Error(`split view layout failed: ${JSON.stringify(result)}`);
+}
+
+await page.locator('#editor').fill('# 分栏\n\n正文');
+await page.waitForFunction(() => window.__messages.some((message) => message.startsWith('save:')));
+await page.evaluate(() => window.__setPreview('<h1 id="split">分栏</h1><p>正文</p>', false, false));
+result = await page.evaluate(() => ({
+  split: document.body.classList.contains('split-view'),
+  preview: document.getElementById('preview').textContent.trim(),
+  dirty: window.__messages.includes('dirty:1'),
+}));
+if (!result.split || result.preview !== '分栏正文' || !result.dirty) {
+  throw new Error(`split view live edit failed: ${JSON.stringify(result)}`);
+}
+
+await page.locator('#btn-split').click();
+result = await page.evaluate(() => ({
+  split: document.body.classList.contains('split-view'),
+  editing: document.body.classList.contains('editing'),
+  previewDisplay: getComputedStyle(document.getElementById('preview')).display,
+  editorDisplay: getComputedStyle(document.getElementById('editor')).display,
+}));
+if (result.split || result.editing || result.previewDisplay === 'none' || result.editorDisplay !== 'none') {
+  throw new Error(`split view exit failed: ${JSON.stringify(result)}`);
+}
 
 await page.locator('#btn-zoom').click();
 await page.locator('#btn-zoom-in').click();
