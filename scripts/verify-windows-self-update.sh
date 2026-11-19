@@ -46,7 +46,7 @@ window.__mdPreviewApplyUpdateRelease({
   tag_name: 'v1.1.12',
   assets: [{
     name: 'MD-Preview-windows-x64.exe',
-    browser_download_url: 'https://github.com/vorojar/md-preview/releases/download/v1.1.12/MD-Preview-windows-x64.exe',
+    browser_download_url: 'https://github.com/galen2027/md-studio/releases/download/v1.1.12/MD-Preview-windows-x64.exe',
     digest: 'sha256:' + 'a'.repeat(64)
   }]
 });

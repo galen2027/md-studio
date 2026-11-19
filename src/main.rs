@@ -338,13 +338,13 @@ fn is_version_arg(arg: &str) -> bool {
 
 fn print_help() {
     println!(
-        "MD Preview {}\n\nUsage:\n  md-preview [--edit] [file.md ...]\n\nOptions:\n  -h, --help       Show this help message\n  -V, --version    Show version information\n      --edit       Open files in source edit mode",
+        "Markdown Studio {}\n\nUsage:\n  md-preview [--edit] [file.md ...]\n\nOptions:\n  -h, --help       Show this help message\n  -V, --version    Show version information\n      --edit       Open files in source edit mode",
         env!("CARGO_PKG_VERSION")
     );
 }
 
 fn print_version() {
-    println!("MD Preview {}", env!("CARGO_PKG_VERSION"));
+    println!("Markdown Studio {}", env!("CARGO_PKG_VERSION"));
 }
 
 #[derive(Copy, Clone)]
@@ -774,9 +774,9 @@ fn show_windows_webview_startup_failure(error: &wry::Error) -> ! {
             let download_label = "下载 WebView2".to_string();
             let choice = parented(rfd::MessageDialog::new())
                 .set_level(rfd::MessageLevel::Error)
-                .set_title("MD Preview 无法启动")
+                .set_title("Markdown Studio 无法启动")
                 .set_description(format!(
-                    "此电脑缺少或无法加载 Microsoft Edge WebView2 Runtime，MD Preview 无法显示预览。\n\n点击“下载 WebView2”打开微软官方下载页面，安装 Evergreen Runtime 后重新启动 MD Preview。\n\n诊断日志：{}",
+                    "此电脑缺少或无法加载 Microsoft Edge WebView2 Runtime，Markdown Studio 无法显示预览。\n\n点击“下载 WebView2”打开微软官方下载页面，安装 Evergreen Runtime 后重新启动 Markdown Studio。\n\n诊断日志：{}",
                     log_path.display()
                 ))
                 .set_buttons(rfd::MessageButtons::OkCancelCustom(
@@ -803,9 +803,9 @@ fn show_windows_webview_startup_failure(error: &wry::Error) -> ! {
         WindowsWebViewStartupFailure::Other => {
             let _ = parented(rfd::MessageDialog::new())
                 .set_level(rfd::MessageLevel::Error)
-                .set_title("MD Preview 无法启动")
+                .set_title("Markdown Studio 无法启动")
                 .set_description(format!(
-                    "预览组件初始化失败。请重新启动 MD Preview；若问题仍存在，可重启 Windows 后重试，并将诊断日志提供给维护人员。\n\n诊断日志：{}\n\n错误详情：{error}",
+                    "预览组件初始化失败。请重新启动 Markdown Studio；若问题仍存在，可重启 Windows 后重试，并将诊断日志提供给维护人员。\n\n诊断日志：{}\n\n错误详情：{error}",
                     log_path.display()
                 ))
                 .show();
@@ -969,7 +969,7 @@ fn confirm_open_update(tag: &str) -> bool {
             .set_level(rfd::MessageLevel::Info)
             .set_title("Update Available")
             .set_description(format!(
-                "MD Preview {tag} is available. Open the release page to download it?"
+                "Markdown Studio {tag} is available. Open the release page to download it?"
             ))
             .set_buttons(rfd::MessageButtons::OkCancelCustom(
                 "Open Release".to_string(),
@@ -3495,7 +3495,7 @@ body.preview-editing #preview-edit-hint, body.rich-edit-loading #preview-edit-hi
 	  function doPrint() {{
 	    printControl.classList.remove('open');
 	    if (previewEditor && previewEditor.active()) {{
-	      document.title = activeTabName || 'MD Preview';
+	      document.title = activeTabName || 'Markdown Studio';
 	      renderCurrentSource(function() {{ window.ipc.postMessage('print'); }});
 	      if (dirty) flushEdit();
 	      return;
@@ -3503,7 +3503,7 @@ body.preview-editing #preview-edit-hint, body.rich-edit-loading #preview-edit-hi
 	    if (inEdit()) leaveEdit();
 	    // Give the print header a meaningful title instead of the empty
 	    // NavigateToString title (which shows as about:blank).
-	    document.title = activeTabName || 'MD Preview';
+	    document.title = activeTabName || 'Markdown Studio';
 	    // Route through Rust: WKWebView ignores window.print(); wry's
 	    // WebView::print() calls the right native API on each platform.
 	    setTimeout(function(){{ window.ipc.postMessage('print'); }}, 0);
@@ -3898,8 +3898,8 @@ window.__mdPreviewInstallUpdateCheck({{
   currentVersion: '{app_version}',
   buttonLabel: '{btn_update_js}',
   nativeUpdater: {native_updater},
-  apiUrl: 'https://api.github.com/repos/vorojar/md-preview/releases?per_page=20',
-  latestUrl: 'https://github.com/vorojar/md-preview/releases/latest'
+  apiUrl: 'https://api.github.com/repos/galen2027/md-studio/releases?per_page=20',
+  latestUrl: 'https://github.com/galen2027/md-studio/releases/latest'
 }});
 {test_update_release_js}
 if ({test_export}) {{
@@ -3997,9 +3997,9 @@ fn escape_js(s: &str) -> String {
 }
 
 fn is_allowed_update_url(url: &str) -> bool {
-    url == "https://github.com/vorojar/md-preview/releases/latest"
-        || url.starts_with("https://github.com/vorojar/md-preview/releases/tag/")
-        || url.starts_with("https://github.com/vorojar/md-preview/releases/download/")
+    url == "https://github.com/galen2027/md-studio/releases/latest"
+        || url.starts_with("https://github.com/galen2027/md-studio/releases/tag/")
+        || url.starts_with("https://github.com/galen2027/md-studio/releases/download/")
 }
 
 fn update_current_version() -> String {
@@ -4155,7 +4155,7 @@ fn check_github_updates() -> UpdateCheckResult {
             "10",
             "-H",
             "Accept: application/vnd.github+json",
-            "https://api.github.com/repos/vorojar/md-preview/releases?per_page=20",
+            "https://api.github.com/repos/galen2027/md-studio/releases?per_page=20",
         ])
         .output();
     let Ok(output) = output else {
@@ -4191,8 +4191,8 @@ fn test_update_release_js() -> String {
         return format!(
             r#"if(window.__mdPreviewApplyUpdateRelease)window.__mdPreviewApplyUpdateRelease({{
   tag_name: '{tag}',
-  html_url: 'https://github.com/vorojar/md-preview/releases/tag/{tag}',
-  download_url: 'https://github.com/vorojar/md-preview/releases/download/{tag}/MD-Preview-macOS-universal.dmg'
+  html_url: 'https://github.com/galen2027/md-studio/releases/tag/{tag}',
+  download_url: 'https://github.com/galen2027/md-studio/releases/download/{tag}/MD-Preview-macOS-universal.dmg'
 }});"#,
             tag = escaped_tag
         );
@@ -5040,10 +5040,13 @@ mod tests {
     #[test]
     fn update_download_urls_are_allowed() {
         assert!(is_allowed_update_url(
-            "https://github.com/vorojar/md-preview/releases/download/v1.1.9/MD-Preview-macOS-universal.dmg"
+            "https://github.com/galen2027/md-studio/releases/download/v1.1.9/MD-Preview-macOS-universal.dmg"
         ));
         assert!(!is_allowed_update_url(
             "https://github.com/other/project/releases/download/v1.0.0/app.dmg"
+        ));
+        assert!(!is_allowed_update_url(
+            "https://github.com/vorojar/md-preview/releases/download/v9.0.0/MD-Preview-windows-x64.exe"
         ));
     }
 
@@ -5185,8 +5188,8 @@ mod tests {
     #[test]
     fn windows_association_shell_path_removes_verbatim_prefixes() {
         assert_eq!(
-            windows_shell_path(Path::new(r"\\?\C:\Tools\中文 目录\MD Preview.exe")),
-            r"C:\Tools\中文 目录\MD Preview.exe"
+            windows_shell_path(Path::new(r"\\?\C:\Tools\中文 目录\Markdown Studio.exe")),
+            r"C:\Tools\中文 目录\Markdown Studio.exe"
         );
         assert_eq!(
             windows_shell_path(Path::new(r"\\?\UNC\server\共享 目录\md-preview.exe")),
@@ -5442,7 +5445,7 @@ fn register_as_default(_lang: Lang) {
         return;
     }
 
-    // Advertise MD Preview as a choice for these extensions.
+    // Advertise Markdown Studio as a choice for these extensions.
     for ext in [".md", ".markdown", ".mdown", ".mkd"] {
         let path = format!(r"Software\Classes\{ext}\OpenWithProgids");
         if let Ok((key, _)) = hkcu.create_subkey(&path) {
@@ -5470,7 +5473,7 @@ fn register_as_default(_lang: Lang) {
     for exe_name in &plan.application_names {
         let app_root = format!(r"Software\Classes\Applications\{exe_name}");
         if let Ok((k, _)) = hkcu.create_subkey(&app_root) {
-            let _ = k.set_value("FriendlyAppName", &"MD Preview".to_string());
+            let _ = k.set_value("FriendlyAppName", &"Markdown Studio".to_string());
         }
         if let Ok((k, _)) = hkcu.create_subkey(format!(r"{app_root}\shell\open\command")) {
             let _ = k.set_value("", &plan.open_command);
@@ -5494,7 +5497,7 @@ fn register_as_default(_lang: Lang) {
     ) {
         let _ = fs::write(&marker, &plan.executable_path);
     }
-    // Intentionally no dialog: users can pick MD Preview via "Open with"
+    // Intentionally no dialog: users can pick Markdown Studio via "Open with"
     // whenever they want, and Win10+ blocks silent default-handler changes
     // anyway — asking them to click through Settings on first launch is noise.
 }
@@ -5502,10 +5505,10 @@ fn register_as_default(_lang: Lang) {
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 fn register_as_default(_lang: Lang) {}
 
-const WEBSITE_URL: &str = "https://vorojar.github.io/md-preview/";
-const GITHUB_URL: &str = "https://github.com/vorojar/md-preview";
+const WEBSITE_URL: &str = "https://github.com/galen2027/md-studio#readme";
+const GITHUB_URL: &str = "https://github.com/galen2027/md-studio";
 #[cfg(target_os = "macos")]
-const RELEASES_URL: &str = "https://github.com/vorojar/md-preview/releases/latest";
+const RELEASES_URL: &str = "https://github.com/galen2027/md-studio/releases/latest";
 
 #[cfg(target_os = "macos")]
 thread_local! {
@@ -5645,7 +5648,7 @@ fn macos_menu_controller_class() -> &'static objc2::runtime::AnyClass {
 
         let alert = NSAlert::new(mtm);
         alert.setAlertStyle(NSAlertStyle::Informational);
-        alert.setMessageText(&NSString::from_str("MD Preview"));
+        alert.setMessageText(&NSString::from_str("Markdown Studio"));
         alert.setInformativeText(&NSString::from_str(&format!(
             "Version {}\n\nFollow local document links between lightweight tabs, keep your reading position between preview and source, and inspect character counts or zoom the content without changing the app chrome.",
             env!("CARGO_PKG_VERSION")
@@ -5806,10 +5809,10 @@ fn install_macos_menu(proxy: EventLoopProxy<UserEvent>, theme: ThemeChoice) {
     let controller_ptr = Retained::into_raw(controller);
     let controller = unsafe { &*controller_ptr };
 
-    let app_menu = menu("MD Preview", mtm);
+    let app_menu = menu("Markdown Studio", mtm);
     app_menu.setAutoenablesItems(false);
     app_menu.addItem(&command_item(
-        "About MD Preview",
+        "About Markdown Studio",
         sel!(mdPreviewShowAbout:),
         "",
         NSEventModifierFlags::empty(),
@@ -5818,7 +5821,7 @@ fn install_macos_menu(proxy: EventLoopProxy<UserEvent>, theme: ThemeChoice) {
     ));
     app_menu.addItem(&NSMenuItem::separatorItem(mtm));
     app_menu.addItem(&command_item(
-        "MD Preview Website",
+        "Markdown Studio Website",
         sel!(mdPreviewOpenWebsite:),
         "",
         NSEventModifierFlags::empty(),
@@ -5843,14 +5846,20 @@ fn install_macos_menu(proxy: EventLoopProxy<UserEvent>, theme: ThemeChoice) {
     ));
     app_menu.addItem(&NSMenuItem::separatorItem(mtm));
     app_menu.addItem(&command_item(
-        "Quit MD Preview",
+        "Quit Markdown Studio",
         sel!(mdPreviewQuit:),
         "q",
         NSEventModifierFlags::Command,
         controller,
         mtm,
     ));
-    let app_menu_item = item("MD Preview", None, "", NSEventModifierFlags::empty(), mtm);
+    let app_menu_item = item(
+        "Markdown Studio",
+        None,
+        "",
+        NSEventModifierFlags::empty(),
+        mtm,
+    );
     app_menu_item.setSubmenu(Some(&app_menu));
     main_menu.addItem(&app_menu_item);
 
@@ -6150,28 +6159,31 @@ mod macos_updater {
         #[test]
         fn finds_bundle_from_executable_path() {
             let bundle = app_bundle_for_exe_path(Path::new(
-                "/Applications/MD Preview.app/Contents/MacOS/md-preview",
+                "/Applications/Markdown Studio.app/Contents/MacOS/md-preview",
             ));
 
-            assert_eq!(bundle, Some(PathBuf::from("/Applications/MD Preview.app")));
+            assert_eq!(
+                bundle,
+                Some(PathBuf::from("/Applications/Markdown Studio.app"))
+            );
         }
 
         #[test]
         fn allows_system_and_user_applications_locations() {
             assert!(is_applications_bundle(
-                Path::new("/Applications/MD Preview.app"),
+                Path::new("/Applications/Markdown Studio.app"),
                 None,
             ));
             assert!(is_applications_bundle(
-                Path::new("/Users/me/Applications/MD Preview.app"),
+                Path::new("/Users/me/Applications/Markdown Studio.app"),
                 Some(Path::new("/Users/me")),
             ));
             assert!(!is_applications_bundle(
-                Path::new("/Volumes/MD Preview/MD Preview.app"),
+                Path::new("/Volumes/Markdown Studio/Markdown Studio.app"),
                 Some(Path::new("/Users/me")),
             ));
             assert!(!is_applications_bundle(
-                Path::new("/Users/me/Downloads/MD Preview.app"),
+                Path::new("/Users/me/Downloads/Markdown Studio.app"),
                 Some(Path::new("/Users/me")),
             ));
         }
@@ -6596,7 +6608,7 @@ fn register_finder_extension() {
     if !active {
         show_info_dialog(
             "Enable the Finder Extension",
-            "Open System Settings > General > Login Items & Extensions > Finder, then enable MD Preview.",
+            "Open System Settings > General > Login Items & Extensions > Finder, then enable Markdown Studio.",
         );
     }
     let _ = fs::create_dir_all(config_dir());
@@ -6632,9 +6644,13 @@ fn update_window_title(window: &Window, session: &DocumentSession) {
                     .map(|name| name.to_string_lossy().to_string())
                     .unwrap_or_else(|| tab.path.to_string_lossy().to_string())
             };
-            format!("{}{} — MD Preview", if tab.dirty { "• " } else { "" }, name)
+            format!(
+                "{}{} — Markdown Studio",
+                if tab.dirty { "• " } else { "" },
+                name
+            )
         })
-        .unwrap_or_else(|| "MD Preview".to_string());
+        .unwrap_or_else(|| "Markdown Studio".to_string());
     window.set_title(&title);
 }
 
@@ -6853,8 +6869,8 @@ fn main() {
     let title = initial_session
         .active()
         .and_then(|tab| tab.path.file_name())
-        .map(|name| format!("{} — MD Preview", name.to_string_lossy()))
-        .unwrap_or_else(|| "MD Preview".to_string());
+        .map(|name| format!("{} — Markdown Studio", name.to_string_lossy()))
+        .unwrap_or_else(|| "Markdown Studio".to_string());
 
     let geom = load_window_geom()
         .filter(|g| geom_visible(g, &event_loop))
@@ -7148,7 +7164,7 @@ fn main() {
                     } else {
                         show_warning_dialog(
                             "Update Unavailable",
-                            "MD Preview could not start the updater for this release.",
+                            "Markdown Studio could not start the updater for this release.",
                         );
                     }
                 }
@@ -7794,7 +7810,7 @@ fn main() {
                 }
                 UpdateCheckResult::UpToDate => {
                     show_info_dialog(
-                        "MD Preview Is Up to Date",
+                        "Markdown Studio Is Up to Date",
                         &format!(
                             "You are using the latest version: {}.",
                             env!("CARGO_PKG_VERSION")
@@ -7804,7 +7820,7 @@ fn main() {
                 UpdateCheckResult::Failed => {
                     show_warning_dialog(
                         "Could Not Check for Updates",
-                        "MD Preview could not reach the update service. Please try again later.",
+                        "Markdown Studio could not reach the update service. Please try again later.",
                     );
                 }
             },

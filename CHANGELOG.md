@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.10 — 2026-11-19
+
+- Published the fork as Markdown Studio with a rewritten Chinese README, English guide, compatibility entry and current privacy/support documentation. Retained the original MIT copyright and upstream attribution.
+- Routed update checks, trusted release URLs, project links and maintainer release tooling to `galen2027/md-studio`; upstream executable update URLs are rejected.
+- Updated application and Windows metadata branding while retaining the compatibility executable name, configuration directory, file associations and CLI arguments.
+- Added a shared Windows packaging script producing a runnable EXE, portable ZIP, deployment guide, SHA-256 files and third-party licenses. Manual CI builds create Windows drafts and protect published releases from replacement.
+- Limited release claims to locally verified Windows x64; other platform source and compile checks do not imply native acceptance or ownership of upstream mobile applications.
+
 ## 1.9.9 — 2026-11-19
 
 - Replaced the 500 ms self-write suppression window with disk-content snapshots, including the loaded version. Rechecked queued notifications before resolving external conflicts; genuine conflicting edits remain protected. Localized the warning in Chinese.

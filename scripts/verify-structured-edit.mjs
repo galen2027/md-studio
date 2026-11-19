@@ -76,7 +76,7 @@ try {
   });
   const requests = [];
   page.on('request', request => {
-    if (/^https?:/.test(request.url()) && !request.url().includes('.localhost/') && !request.url().startsWith('https://api.github.com/repos/vorojar/md-preview/releases')) requests.push(request.url());
+    if (/^https?:/.test(request.url()) && !request.url().includes('.localhost/') && !request.url().startsWith('https://api.github.com/repos/galen2027/md-studio/releases')) requests.push(request.url());
   });
   async function downloadFile(extension) {
     let error;

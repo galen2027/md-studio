@@ -23,11 +23,14 @@ fn main() {
     );
     let version = env!("CARGO_PKG_VERSION");
     let file_version = format!("{version}.0");
-    res.set("CompanyName", "vorojar");
-    res.set("FileDescription", "MD Preview");
+    res.set("CompanyName", "Markdown Studio contributors");
+    res.set("FileDescription", "Markdown Studio");
     res.set("FileVersion", &file_version);
-    res.set("LegalCopyright", "Copyright (c) vorojar");
-    res.set("ProductName", "MD Preview");
+    res.set(
+        "LegalCopyright",
+        "Copyright (c) 2025 vorojar; 2026 Markdown Studio contributors",
+    );
+    res.set("ProductName", "Markdown Studio");
     res.set("ProductVersion", version);
     res.compile().expect("failed to compile Windows resources");
 }

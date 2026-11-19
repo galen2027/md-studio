@@ -119,8 +119,8 @@
     if (!button) return;
 
     var label = config.buttonLabel || 'Update available';
-    var latestUrl = config.latestUrl || 'https://github.com/vorojar/md-preview/releases/latest';
-    var apiUrl = config.apiUrl || 'https://api.github.com/repos/vorojar/md-preview/releases/latest';
+    var latestUrl = config.latestUrl || 'https://github.com/galen2027/md-studio/releases/latest';
+    var apiUrl = config.apiUrl || 'https://api.github.com/repos/galen2027/md-studio/releases/latest';
     var storageKey = config.storageKey || 'md-preview:update-check';
     var maxAgeMs = config.maxAgeMs || 24 * 60 * 60 * 1000;
     var timeoutMs = config.timeoutMs || 3500;

@@ -140,26 +140,32 @@ src = Path("src/main.rs").read_text(encoding="utf-8")
 
 if f'"softwareVersion": "{version}"' not in site:
     raise SystemExit("website structured data must match Cargo.toml version")
-for marker in ("Multi-document tabs", "Session restore", "Finder to source edit"):
-    if marker not in site:
-        raise SystemExit(f"website is missing v1.2 product marker: {marker}")
-for marker in ("Desktop tabs", "Session restore", "Finder workflow"):
-    if marker not in readme:
-        raise SystemExit(f"README.md is missing v1.2 product marker: {marker}")
-for marker in ("桌面标签", "会话恢复", "Finder 工作流"):
-    if marker not in readme_zh:
-        raise SystemExit(f"README_zh.md is missing v1.2 product marker: {marker}")
-for marker in (f"New in v{version}", "Local document links", "Counts, zoom, continuity", "Reliable autosave", "Split edit and preview", "Portable paths and images"):
-    if marker not in site:
-        raise SystemExit(f"website is missing current product marker: {marker}")
-for marker in ("Local document links", "Live statistics", "Content zoom", "Scroll continuity", "Reliable autosave", "Split view", "Local images"):
-    if marker not in readme:
-        raise SystemExit(f"README.md is missing current product marker: {marker}")
-for marker in ("本地文档链接", "实时统计", "正文缩放", "滚动连续", "可靠自动保存", "左右分栏", "本地图片"):
-    if marker not in readme_zh:
-        raise SystemExit(f"README_zh.md is missing current product marker: {marker}")
-if "What's New" not in src or "Follow local document links" not in src:
-    raise SystemExit("macOS About must keep the current product positioning and What's New entry")
+repo = "https://github.com/galen2027/md-studio"
+exe_url = repo + "/releases/latest/download/MD-Preview-windows-x64.exe"
+for name in ("README.md", "README_en.md"):
+    text = Path(name).read_text(encoding="utf-8")
+    if "Markdown Studio" not in text or exe_url not in text:
+        raise SystemExit(f"{name} must identify this fork and link the runnable Windows EXE")
+if "README.md" not in readme_zh:
+    raise SystemExit("README_zh.md must preserve the Chinese compatibility entry")
+if exe_url not in site:
+    raise SystemExit("website must link this repository's executable")
+if "https://api.github.com/repos/galen2027/md-studio/releases?per_page=20" not in src:
+    raise SystemExit("desktop update source must use this repository")
+import urllib.parse
+for name in ("README.md", "README_en.md", "README_zh.md", "docs/README.md", "docs/index.html", "docs/privacy.html", "docs/support.html", "release/README.md"):
+    path = Path(name)
+    content = path.read_text(encoding="utf-8")
+    targets = re.findall(r'\[[^\]]*\]\((<[^>]+>|[^)]+)\)', content)
+    targets += re.findall(r'(?:href|src)=[\"\']([^\"\']+)[\"\']', content)
+    for target in targets:
+        target = target.strip("<>").split("#", 1)[0]
+        if not target or re.match(r"[a-zA-Z][a-zA-Z0-9+.-]*:", target):
+            continue
+        local = path.parent / urllib.parse.unquote(target)
+        if not local.exists():
+            raise SystemExit(f"Broken local documentation link in {name}: {target}")
+
 PY
   ran=1
 fi

@@ -34,7 +34,7 @@ try {
       headers: { 'Access-Control-Allow-Origin': '*' } });
   });
   page.on('request', request => {
-    if (/^https?:/.test(request.url()) && !request.url().includes('.localhost/') && !request.url().startsWith('https://api.github.com/repos/vorojar/md-preview/releases')) remote.push(request.url());
+    if (/^https?:/.test(request.url()) && !request.url().includes('.localhost/') && !request.url().startsWith('https://api.github.com/repos/galen2027/md-studio/releases')) remote.push(request.url());
   });
   await page.addInitScript(() => {
     window.__messages = []; window.__backupFail = false;

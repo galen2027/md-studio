@@ -41,7 +41,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-REPO="vorojar/md-preview"
+REPO="galen2027/md-studio"
 ASSET="MD-Preview-macOS-universal.dmg"
 SIGN_SCRIPT="${MD_PREVIEW_SIGN_SCRIPT:-$HOME/.claude/skills/remote-mac-sign/sign.sh}"
 SIGN_ATTEMPTS="${MD_PREVIEW_SIGN_ATTEMPTS:-2}"
@@ -110,7 +110,7 @@ spctl -a -t open --context context:primary-signature "$SIGNED" >/dev/null 2>&1 \
 VERIFY_MOUNT="$WORK/verify-mount"
 mkdir -p "$VERIFY_MOUNT"
 hdiutil attach "$SIGNED" -nobrowse -mountpoint "$VERIFY_MOUNT" >/dev/null
-VERIFY_APP="$VERIFY_MOUNT/MD Preview.app"
+VERIFY_APP="$VERIFY_MOUNT/Markdown Studio.app"
 VERIFY_EXTENSION="$VERIFY_APP/Contents/PlugIns/MDPreviewFinderExtension.appex"
 if ! codesign --verify --deep --strict --verbose=2 "$VERIFY_APP" >/dev/null 2>&1 \
   || ! codesign -d --entitlements :- "$VERIFY_EXTENSION" 2>&1 \
@@ -142,17 +142,17 @@ MOUNT=$(mktemp -d)/mnt
 mkdir -p "$MOUNT"
 hdiutil attach "$SIGNED" -nobrowse -mountpoint "$MOUNT" >/dev/null
 
-TARGET_APP="$REPO_ROOT/target/MD Preview.app"
-if [ -d "$MOUNT/MD Preview.app" ]; then
+TARGET_APP="$REPO_ROOT/target/Markdown Studio.app"
+if [ -d "$MOUNT/Markdown Studio.app" ]; then
   rm -rf "$TARGET_APP"
-  ditto "$MOUNT/MD Preview.app" "$TARGET_APP"
+  ditto "$MOUNT/Markdown Studio.app" "$TARGET_APP"
   echo "    replaced $TARGET_APP"
 fi
 
-APPL="/Applications/MD Preview.app"
+APPL="/Applications/Markdown Studio.app"
 if [ -d "$APPL" ] && [ -w "/Applications" ]; then
   rm -rf "$APPL"
-  ditto "$MOUNT/MD Preview.app" "$APPL"
+  ditto "$MOUNT/Markdown Studio.app" "$APPL"
   echo "    replaced $APPL"
 elif [ -d "$APPL" ]; then
   echo "    /Applications not writable; skipping system-wide replace"

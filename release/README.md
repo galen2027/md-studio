@@ -1,37 +1,59 @@
-# MD Preview 版本归档
+# Markdown Studio 发布与版本归档
 
-当前归档：**v1.9.9，2026-11-19**。本次将此前未提交、累计到 v1.9.9 的开发成果统一作为版本基线提交；上一次 Git 入库版本为 v1.5.0。不补造中间版本的提交或标签。
+当前公开版本：**v1.9.10，2026-11-19**。正式仓库为 [galen2027/md-studio](https://github.com/galen2027/md-studio)，Windows x64 发布文件放在 [GitHub Releases](https://github.com/galen2027/md-studio/releases)。
 
-## 本次重点功能
+## 下载与分发
 
-| 功能 | 说明 |
+- [直接下载 Windows EXE](https://github.com/galen2027/md-studio/releases/latest/download/MD-Preview-windows-x64.exe)：直接运行；文件名沿用旧版，程序显示名称为 Markdown Studio。
+- [完整便携包](https://github.com/galen2027/md-studio/releases/download/v1.9.10/MD-Studio-v1.9.10-windows-x64.zip)：包含 EXE、校验文件、部署说明和许可证。
+- [部署、验证与回滚](<../docs/MD Studio 发布部署方案_v1.9.10_261119.md>)：含实际大小、SHA-256、签名状态和依赖说明。
+
+源码仓库不存储 EXE/ZIP。克隆源码不会下载发布程序；每个发布物使用同名 `.sha256` 校验，不承诺不同环境重建得到相同字节。
+
+Windows 需要 WebView2 Runtime；无需另外安装 VC++ Runtime、Node、Python 或 Rust。本版未进行 Authenticode 签名。其他平台源码与历史维护脚本保留，但不提供本版本安装包或原生验收承诺。
+
+## 本地构建与打包
+
+沿用 Cargo.lock 和已有工具链，在项目根目录执行：
+
+```powershell
+cargo fmt --check
+cargo test --locked
+cargo build --release --locked
+& .\scripts\package-windows-release.ps1
+```
+
+再执行 `bash scripts/verify.sh` 和原生测试，具体见 [测试索引](../tests/README.md)。打包脚本从 Cargo.toml 读取版本，核验 EXE 的 `--version`、PE 依赖，输出 `release/v版本号/`。发布前将生成的部署文档实际校验值同步回 docs 的同名文档。
+
+| 独立公开资产 | 内容 |
 | --- | --- |
-| Mermaid 节点编辑 | 在放大窗口点选 flowchart/graph 节点，编辑文字、删除节点及关联连线、撤销图修改；备份、解析、比对和渲染通过后回写原 MD |
-| 分栏同步 | 左预览、右源码独立滚动，按源码位置双向同步；支持光标、Ctrl+H 定位、缩放及窗口变化 |
-| 文件冲突保护 | 以磁盘快照替代 500ms 时间窗，复核延迟通知；真实外部冲突暂停自动保存、保留本地编辑，提示汉化 |
-| 所见即所得文字编辑 | 标题、富文本段落、列表、引用、表格可直接编辑；内嵌固定 Vditor，自动保存及 Ctrl+S 复用同一源码状态 |
+| `MD-Preview-windows-x64.exe` / `.sha256` | 主程序与校验值 |
+| `MD-Studio-v版本号-windows-x64.zip` / `.sha256` | 完整便携包与校验值 |
+| `MD-Studio-Deployment-v版本号-zh.md` | 中文部署文档下载别名 |
+| `MD-Studio-v版本号-licenses.zip` / `.sha256` | 第三方声明、许可正文与校验值 |
 
-## 本次一并归档的累计改动
+本地同版本重建需明确传 `-Force`；这不授权覆盖公开资产。
 
-- 新建未命名标签、另存为及保存失败恢复；只读文件可另存、放弃关闭或取消，避免关闭死循环。
-- DOCX 导出、模板样式学习、格式标准化、标题编号清理；表格固定列网格、内容权重列宽、可见实线、内边距、重复表头、跨页和单元格换行。
-- Mermaid 原始 SVG、高清 3 倍 PNG 和 Word 高分辨率位图；灯箱缩放、适配窗口及空格加左键平移。
-- 本地图片按 Markdown 所在目录解析，受控协议加载大图，连续保存不失效；原图片引用不会被内部显示地址替换。
-- Ctrl+F 查找、Ctrl+H 单项/全部替换、左预览右编辑、正文统计与缩放；Windows 单实例标签复用和文件关联修复。
-- Windows 静态 CRT、PE 依赖门禁、WebView2 缺失提示；Windows 启动等待、中文组合输入、原生对话框归属及关闭流程修复。
-- 离线编辑资源版本/hash/许可证、98 项 Rust 测试、浏览器及原生 WebView2 回归、真实文档副本验证、部署与回滚说明。
+## 草稿与正式发布
 
-各版本详细变化以根目录 [CHANGELOG.md](../CHANGELOG.md) 为准；测试范围及未验证事项见 [tests/README.md](../tests/README.md)。
+1. 同步版本、更新说明、帮助/界面和部署文档；保留原 MIT 版权和第三方许可。
+2. 完成测试和打包，检查文档、截图、源码及 Git 历史是否含凭据或私人内容。
+3. 提交 master，创建不可移动的版本标签并推送。`scripts/release.sh 版本号` 要求 GitHub CLI 已登录。
+4. Actions 的 **Windows Release Draft** 仅通过手动 workflow_dispatch 构建已有标签并上传草稿。也可直接上传本地验收过的发布物至草稿；两种方式只选一种，避免重复资产。
+5. 核对标签、七个资产、校验值、签名和部署文档后正式发布。已公开版本及资产不可覆盖，需要改动时递增版本。
+6. 匿名访问仓库及 Release，从 README 的 EXE 链接重新下载，核对大小与 SHA-256。
 
-## Git 与发布文件的职责
+自动更新使用本仓库的 Release API 和资产地址；旧版 v1.9.9 及更早版本仍可能检查上游，需手动升级一次。EXE 兼容文件名、配置目录和 CLI 参数保留。
 
-Git 纳入源码、Cargo 锁文件、构建配置、离线资源、测试、许可证、版本说明及 SHA-256 文件。`.gitignore` 排除 `target/`、`target-crt-static/` 和 release 目录中的 EXE/ZIP；这些生成文件继续保留在本地，不删除。
+`release-sign.sh` 是历史 macOS 签名工具，不属于 Windows 发布流程；不自动执行，也不承诺存在签名服务或 Apple 账户。
 
-本地 v1.9.9 程序和便携包位于 `release/v1.9.9/`。仅克隆 Git 仓库不会下载 EXE/ZIP：需要从保留的发布目录取得程序，或按源码构建。源码标签不承诺不同构建环境生成字节完全相同的二进制，原始发布物用 SHA-256 核验。
+## 历史基线
 
-| 发布物 | SHA-256 |
+v1.9.9 将 v1.5.0 之后累计改动统一入库，未补造中间版本提交。源码标签保留；原本地成品继续存放于 release/v1.9.9，未作为本次公开版本上传。
+
+| v1.9.9 原发布物 | SHA-256 |
 | --- | --- |
 | MD-Preview-windows-x64.exe | 4C20AE71ED9D074A226AEC91E17A8ED7A5388F8A946762E3ED20D78B1B0019AA |
 | MD-Preview-v1.9.9-windows-x64.zip | AE20836C8A11EB17F1E53D3B58F37ACD0CF01AA5CACEC534365B92851B1AC4A3 |
 
-部署、使用、备份恢复和回滚：[v1.9.9 部署说明](<v1.9.9/MD Preview 发布部署方案_v1.9.9_261119.md>)。本次 Git 提交和标签在本地建立，未推送远程，也未触发公开发布。
+详细历史见 [CHANGELOG.md](../CHANGELOG.md)，旧版恢复见 [v1.9.9 部署说明](<v1.9.9/MD Preview 发布部署方案_v1.9.9_261119.md>)。

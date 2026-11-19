@@ -1,248 +1,116 @@
-# MD Preview
+# Markdown Studio
 
-**English · [简体中文](README_zh.md)**
+**[English](README_en.md) · 简体中文**
 
-[![GitHub stars](https://img.shields.io/github/stars/vorojar/md-preview)](https://github.com/vorojar/md-preview/stargazers)
-[![Release](https://img.shields.io/github/v/release/vorojar/md-preview)](https://github.com/vorojar/md-preview/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20iOS%20%7C%20Android-lightgrey)](https://github.com/vorojar/md-preview/releases)
-[![App Store](https://img.shields.io/badge/App%20Store-Local%20Markdown%20Preview-blue?logo=appstore)](https://apps.apple.com/cn/app/local-markdown-preview/id6779451523)
-[![Binary size](https://img.shields.io/badge/binary-~6.59%20MiB-green)](https://github.com/vorojar/md-preview/releases)
+[![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)](https://github.com/galen2027/md-studio/releases/latest)
+[![Release](https://img.shields.io/github/v/release/galen2027/md-studio)](https://github.com/galen2027/md-studio/releases)
+[![MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-> Multiple Markdown files, one lightweight window. Follow local document links, inspect counts, zoom the page, and edit with automatic save—without launching a whole IDE.
+本地 Markdown **编辑、预览、流程图修改和文档导出**工具。既可以直接修改排版后的文字，也可以使用源码或左右分栏编辑。
 
-MD Preview is a fast, local-first Markdown previewer and quick editor built with **Rust** and the system **WebView** on desktop, plus native iOS and Android shells for opening Markdown from Files, WeChat, WeCom, and system share sheets. It does not bundle Chromium, does not require Electron, and keeps all rendering assets offline. Open several local documents as tabs, return to the same active document after restart, or create a Markdown file from Finder on macOS and start typing immediately.
+基于 Rust 与系统 WebView，渲染和编辑资源离线内嵌。当前正式交付 **Windows x64 便携版**。
 
-![MD Preview screenshot](https://vorojar.github.io/md-preview/hero.jpg)
+## 下载 Windows 版
 
-## Why It Exists
+**[下载可直接运行的 EXE](https://github.com/galen2027/md-studio/releases/latest/download/MD-Preview-windows-x64.exe)** · [完整便携包 ZIP](https://github.com/galen2027/md-studio/releases/download/v1.9.10/MD-Studio-v1.9.10-windows-x64.zip) · [版本更新](CHANGELOG.md)
 
-AI coding tools now generate a lot of Markdown: `README.md`, `plan.md`, task specs, architecture notes, changelogs, KaTeX formulas, and Mermaid diagrams. Most Markdown tools are still either full writing studios or editor plugins. MD Preview is deliberately smaller:
+| 文件 | 用途 |
+| --- | --- |
+| `MD-Preview-windows-x64.exe` | 主程序，直接运行，无需安装应用本身 |
+| `MD-Preview-windows-x64.exe.sha256` | 主程序完整性校验 |
+| `MD-Studio-v1.9.10-windows-x64.zip` | 主程序、说明和许可证，便于完整分发 |
+| `MD-Studio-Deployment-v1.9.10-zh.md` | 安装、验证、备份恢复和回滚说明 |
 
-- **Open fast** - native binary, system WebView, no bundled browser runtime.
-- **Stay local** - Markdown, syntax highlighting, math, and diagrams render on your machine.
-- **Keep documents together** - open multiple Markdown and text files in one tabbed window and resume the session later.
-- **Navigate documentation folders** - relative and absolute links to local Markdown or text files open or activate tabs instead of leaving the preview.
-- **Edit without detours** - create Markdown from the tab bar or Finder, type immediately, and let debounced autosave persist the change.
-- **Read at your pace** - keep scroll progress between preview and source, see live character counts, and zoom only the document content.
-- **Follow external edits** - save the file in Vim, VS Code, Cursor, Zed, or anything else; the preview refreshes automatically.
-- **Keep reading clean** - the toolbar only appears on hover, and the start screen gives you Open File plus recent files.
-- **Handle real Markdown** - code blocks, tables, task lists, math formulas, Mermaid diagrams, images, links, and print all work offline.
+EXE 保留原文件名以兼容已有打开方式和更新流程，程序显示名称为 **Markdown Studio**。下载文件见本仓库 [Releases](https://github.com/galen2027/md-studio/releases)，Git 源码中不存储编译后的 EXE/ZIP。
 
-## Fits AI Coding Workflows
+**运行环境：**建议 Windows 11 x64，必须具有 Microsoft Edge WebView2 Runtime。通常系统已自带；缺失时程序会提示，[微软下载入口](https://developer.microsoft.com/microsoft-edge/webview2/)。无需另装 VC++ Runtime、Node、Python、Rust、Mermaid 或 Vditor。
 
-Use it as a small preview-first workspace for the documents your tools generate:
+发布程序暂未进行 Authenticode 签名，Windows 可能提示未知发布者。请核对来源和 SHA-256，无需关闭系统安全保护。
 
-- Keep Claude Code / Codex / Cursor-generated plans, task notes, and READMEs open as tabs without opening a full IDE.
-- Resume the same tab order and active document after restarting the app; inactive files load from disk only when selected.
-- Make small source edits inside MD Preview, while still getting live reload when another editor writes the file.
-- On macOS, create a new Markdown document from Finder and land directly in source edit instead of opening VS Code first.
-- Print or export the rendered preview when you need a clean PDF.
-
-## Download
-
-Get the latest build from [GitHub Releases](https://github.com/vorojar/md-preview/releases).
-
-| Platform | Package | Notes |
-|---|---|---|
-| macOS | `MD-Preview-macOS-universal.dmg` | Universal app for Apple Silicon and Intel. Releases are signed and notarized. |
-| Windows | `MD-Preview-windows-x64.exe` | Portable x64 single-file app with the MSVC CRT linked statically. The in-app updater downloads the next exe, verifies its SHA-256 digest, replaces itself, and relaunches. |
-| Linux | `MD-Preview-linux-x64.tar.gz` | Requires the system WebKitGTK runtime. |
-| iOS / iPadOS | [Local Markdown Preview on the App Store](https://apps.apple.com/cn/app/local-markdown-preview/id6779451523) | Native iPhone and iPad viewer for opening Markdown from Files and the iOS share sheet. |
-| Android | `MD-Preview-Android.apk` | Native Android viewer for opening Markdown files from Files, WeChat, WeCom, and share sheets. |
-
-Android builds are published as separate mobile releases, for example [mobile-android-v1.0.7](https://github.com/vorojar/md-preview/releases/tag/mobile-android-v1.0.7). The iOS build is now available on the App Store as [Local Markdown Preview](https://apps.apple.com/cn/app/local-markdown-preview/id6779451523).
-
-### Windows portability and export dependencies
-
-The Windows x64 release links the MSVC C runtime statically, so the receiving computer does not need a separate Visual C++ Redistributable. The UI still requires the Microsoft Edge WebView2 Runtime; it is normally present on fully updated Windows 11 systems, and MD Preview shows a native download prompt and writes a diagnostic log if WebView2 is missing. Mermaid, KaTeX, syntax highlighting, and icons are embedded in the EXE.
-
-DOCX generation does not require Microsoft Word. Word, WPS, or LibreOffice is only needed to open the generated document. PDF export is the one optional path that requires an installed Microsoft Edge or Google Chrome browser. Windows builds are currently unsigned, so SmartScreen may show an unknown-publisher warning; verify the published SHA-256 value before running the EXE.
-
-Version 1.9.9 combines offline WYSIWYG text editing with independent, semantically synchronized split panes. Disk snapshots prevent delayed self-save notifications from producing false conflicts; real external conflicts still protect local edits. In the Mermaid lightbox, choose Edit nodes to click flowchart/graph nodes, change labels, delete nodes and incident edges, or undo diagram changes. Original SVG, 3x PNG, zoom and Space-drag remain available. Source patches are backed up, parsed, checked and rendered before application. Unsupported syntax and indexed edge styles require source editing; node dragging is outside this version. Markdown formatting may normalize after rich edits; undo history resets across mode/tab changes. See [module design](docs/预览编辑模块设计_v1.2_261119.md).
-
-Version 1.9.6 adds Space + left-button drag panning for large Mermaid diagrams, replaces the read-only save-failure close loop with Save As / discard / cancel recovery, and repairs Windows Chinese IME focus on first edit and after returning to the app. The most reliable deployment remains a real EXE in a stable local directory, launched once before it is selected as the default app.
-
-You can also build from source:
-
-```bash
-git clone https://github.com/vorojar/md-preview.git
-cd md-preview
-cargo build --release
-./target/release/md-preview README.md
+```powershell
+Get-FileHash .\MD-Preview-windows-x64.exe -Algorithm SHA256
+.\MD-Preview-windows-x64.exe --version
 ```
 
-To create the macOS `.app` bundle locally:
+## 能做什么
+
+| 能力 | 当前行为 |
+| --- | --- |
+| 格式化内容直接编辑 | 标题、含粗体/链接/行内代码的段落、列表、引用、表头及表格单元格可修改 |
+| 源码与分栏 | 左侧预览、右侧源码独立滚动，按源码位置同步，跟随光标及查找替换定位 |
+| Mermaid 图形修改 | 放大窗口中点选 `flowchart` / `graph` 节点，修改文字、删除节点及关联连线、撤销图修改 |
+| 图形阅读与下载 | 矢量缩放、适配窗口、空格加左键平移，下载 SVG 原图及 3 倍 PNG |
+| 查找替换 | Ctrl+F 搜索；Ctrl+H 对 Markdown 源码进行单项或全部替换 |
+| 标签与保存 | 多文档标签、会话恢复、新建未命名文档、另存为、自动保存及 Ctrl+S |
+| 本地图片与链接 | 图片按 MD 所在目录解析，本地文档链接打开或激活标签 |
+| DOCX 导出 | 生成 Word 文档，支持可选模板、列宽计算、表格实线、重复表头及格式标准化 |
+| PDF / 打印 | 从当前内容生成预览后打印；直接导出 PDF 需要 Edge 或 Chrome |
+| 阅读辅助 | 目录导航、字符统计、正文缩放、代码高亮、KaTeX 公式及 Markdown 表格 |
+
+生成 DOCX 不需要 Word；打开生成的文件需要 Word、WPS 或 LibreOffice。
+
+![所见即所得编辑](docs/images/editor.png)
+
+## 开始使用
+
+1. 退出旧版窗口，把 EXE 放到固定本机目录，再启动。单实例机制会复用仍在运行的旧程序，因此升级时要先退出旧版。
+2. 打开或拖入 `.md` / `.txt` 文件；再次从资源管理器打开文档，会在当前程序新增或激活标签。
+3. 在工具栏选择“所见即所得编辑”，直接点击格式化内容输入；选择源码或分栏按钮可切换编辑方式。
+4. 停顿约一秒自动保存，Ctrl+S 立即保存回原文件。只读或权限失败时可另存为、放弃关闭或取消。
+5. 要修改流程图：**点击图放大 → 编辑节点 → 点击节点 → 应用文字**。删除需再次确认，也可撤销当前图编辑会话中的修改。
+
+![流程图节点编辑](docs/images/diagram-edit.png)
+
+| 快捷键 | 操作 |
+| --- | --- |
+| Ctrl+F / Ctrl+H | 查找 / 源码替换 |
+| Ctrl+S / Ctrl+Shift+S | 保存 / 另存为 |
+| Ctrl+N | 新建未命名文档 |
+| Ctrl+Z / Ctrl+Y | 编辑模式内撤销 / 重做 |
+| 空格 + 鼠标左键拖动 | 在已放大的 Mermaid 图中平移 |
+| Esc | 关闭图形窗口或退出相应编辑界面；组合输入期间保留输入法处理 |
+
+## 保存、备份与限制
+
+- **自动保存直接写回原文件。**进入格式化文字编辑、应用流程图修改前，会备份磁盘原文件到配置目录 `backups/`；失败时不应用操作。
+- 默认配置目录为 `%LOCALAPPDATA%\md-preview`，沿用旧版位置，避免升级后丢失会话。`MD_PREVIEW_CONFIG_DIR` 可指定其他位置；未保存的新文档没有磁盘原文备份。
+- 富文本编辑会重新序列化 Markdown，空白、列表符号和表格排版等可能规范化。撤销历史不跨模式或标签保留；长期回退请使用备份或版本控制。
+- Mermaid 图形编辑目前只支持 `flowchart` / `graph` 的**节点**；暂不提供节点拖拽、连线文字编辑或其他图类型的图形编辑。无法安全定位的扩展语法、使用数字索引 `linkStyle` 的节点删除会提示改用源码。
+- 分栏按块位置同步，超长单段、自定义 HTML 等内容只能近似对应，不能保证逐像素对齐。
+- 跨电脑迁移时一起复制 MD 和图片目录并保留相对结构；文档中写死的绝对盘符路径仍要求目标文件存在。
+- 真实外部文件冲突会暂停自动保存并保留编辑。先决定保留哪个版本，再显式保存或另存，不要直接丢弃未保存内容。
+
+[完整部署和回滚说明](<docs/MD Studio 发布部署方案_v1.9.10_261119.md>) · [隐私说明](docs/privacy.html) · [问题反馈](https://github.com/galen2027/md-studio/issues)
+
+## 平台与验证范围
+
+Windows x64 是本仓库当前正式发布和本机 WebView2 验证的平台。源码保留 macOS、Linux、iOS 和 Android 实现；CI 编译成功不等于原生使用验收，本版本没有发布这些平台的安装包，也不代表维护上游 App Store 应用。
+
+已覆盖文字/表格编辑、图片连续保存、文件冲突、分栏同步、图节点编辑/删除/撤销、SVG/PNG 下载和 DOCX XML 回归。物理中文输入法、干净 Windows 11 VM、Word/WPS/LibreOffice 的本版本人工渲染仍有待验证项，详见部署说明和 [测试索引](tests/README.md)。
+
+## 从源码构建
 
 ```bash
-chmod +x bundle.sh
-./bundle.sh
-cp -r "target/MD Preview.app" /Applications/
+git clone https://github.com/galen2027/md-studio.git
+cd md-studio
+cargo build --locked
+cargo test --locked
+cargo build --release --locked
 ```
 
-## Usage
+Cargo 包和本地构建文件名保持 `md-preview`，Windows 输出在 `target/release/md-preview.exe`。浏览器测试使用开发机已有 Node 与 Playwright；接收发布 EXE 的电脑不需要它们。
 
 ```bash
-# Open one or several files directly
-md-preview README.md plan.md task.md
-
-# Or launch an empty window, use Open File, pick a recent file, or drag one in
-md-preview
+bash scripts/verify.sh
+# Windows 原生工作流，先 cargo build
+node scripts/verify-preview-workflows.mjs
+node scripts/verify-structured-edit.mjs
 ```
 
-MD Preview accepts `.md` and `.txt` files through drag and drop, the open dialog, recent files, or the command line. Desktop documents open as tabs; opening or double-clicking another file while MD Preview is running reuses the existing Windows process and adds or activates its tab. Windows single-instance startup binds a widely spaced candidate first and probes only conflicting candidates with a bounded timeout, avoiding the previous multi-second timeout path. Use the tab-bar `+` or `Cmd/Ctrl+N` to create a Markdown file beside the current document and enter source edit immediately. Tab order and the active document are restored across launches, while inactive content stays on disk until selected. Standard Markdown image references and supported local document links resolve from the opened Markdown file's directory, never from the EXE directory.
+发布包由 `scripts/package-windows-release.ps1` 生成；手动 Windows 构建工作流只生成草稿，正式发布需核对资产和校验值。[维护者发布说明](release/README.md) · [模块设计](docs/预览编辑模块设计_v1.2_261119.md)
 
-For a folder to remain portable across computers, copy the Markdown file and its image folders together and keep their relative layout. Local absolute paths and `file:` URLs can be displayed on the machine where they exist, but drive-specific paths are not portable to another computer.
+## 开源来源与许可证
 
-If a tab's file is moved or deleted, the tab remains visible instead of disappearing silently. Select it to locate the file again or close the tab.
+本项目基于 [vorojar/md-preview](https://github.com/vorojar/md-preview) 继续开发，保留原作者版权和 [MIT 许可证](LICENSE)。本仓库主要增加了文档导出、Windows 便携性、格式化文字编辑、分栏同步与流程图节点编辑等能力。
 
-### macOS Finder actions
-
-The notarized macOS app includes a Finder extension. After dragging `MD Preview.app` to Applications, open it once. If macOS does not enable the extension automatically, use **System Settings → General → Login Items & Extensions → Finder Extensions**.
-
-Right-click inside a Finder folder to create Markdown, text, JSON, or HTML files, copy the folder path, or open the folder in Terminal. **New Markdown** creates a non-conflicting filename and opens it directly in MD Preview's source editor.
-
-On iPhone and iPad, Local Markdown Preview opens Markdown and plain-text files from Files and the iOS share sheet. On Android, MD Preview appears in the system "Open with" and share flows for Markdown files. Recent files are cached privately inside the app, so files opened from temporary providers such as WeChat or WeCom remain available later; stale recent entries are removed safely instead of crashing.
-
-## Features
-
-| Feature | What it means |
-|---|---|
-| Desktop tabs | Open multiple Markdown or text documents in one window; on Windows, later file launches reuse the running process, duplicate paths activate the existing tab, and widely spaced bind-first candidates keep startup responsive. |
-| Session restore | Restore tab order and the active document after restart without caching inactive document bodies. |
-| Missing files | Moved or deleted files remain as explicit missing tabs with Locate and Close actions. |
-| Finder workflow | On macOS, create Markdown from Finder and start editing it immediately in MD Preview. |
-| Reliable autosave | Source edits save after a short pause and are flushed before preview, tab switches, tab/window close, or quit; read-only save failures offer Save As, discard, or Cancel while keeping the source intact. |
-| Local document links | Relative or absolute links to existing Markdown and text files open or activate a tab; invalid local targets do not replace the preview. |
-| Front matter | YAML metadata at the start of a document stays readable as metadata instead of collapsing into a heading. |
-| Live statistics | The tab bar shows non-whitespace and total character counts and updates while editing. |
-| Content zoom | Zoom the rendered document or source text from 70% to 200% without resizing the tab bar or toolbar. |
-| Scroll continuity | Preview and source edit preserve normalized reading progress when their document heights differ. |
-| Start screen | Empty launches show Open File and local recent files, so the app is useful before anything is loaded. |
-| Mobile open | iOS opens Markdown from Files and the share sheet; Android can open Markdown from Files, WeChat, WeCom, and Android share sheets. |
-| Drag and drop | Drop a Markdown file into the window and it opens immediately. |
-| CLI open | `md-preview path/to/file.md` opens directly from a shell. |
-| Find and replace | `Cmd/Ctrl+F` searches the rendered preview; `Ctrl+H` enters Markdown source mode with Replace and Replace All. |
-| Live reload | External edits refresh the rendered document automatically. |
-| Inline source edit | `Cmd/Ctrl+E` switches to source mode; edits autosave, while `Cmd/Ctrl+S` forces an immediate save. Windows CJK IME composition works on first focus and after returning to the window. |
-| Split view | A toolbar button shows the rendered preview on the left and Markdown source on the right, with the same autosave and replacement behavior. |
-| Native print | `Cmd/Ctrl+P` opens the platform print dialog and prints only the preview. |
-| Syntax highlighting | highlight.js is embedded offline and injected after first paint. |
-| Math | KaTeX renders `$...$`, `$$...$$`, `\(...\)`, and `\[...\]` on demand. |
-| Diagrams | Mermaid fenced blocks render locally when the document actually uses them; after zooming the lightbox, hold Space and left-drag to pan to a local area. |
-| Diagram export | Lightbox download distinguishes the vector SVG original from the 3× PNG; Word export uses a 300-PPI PNG compatibility fallback with stable layout size. |
-| DOCX tables | Word export uses template-aware, content-weighted fixed column grids with six explicit solid table-level borders, cell padding, numeric alignment, repeatable headers, and preserved Markdown/HTML line breaks instead of unpredictable auto-fit. |
-| Local images | Document-relative, parent-relative, Windows-backslash, local absolute, and local `file:` JPG/PNG/GIF/WebP/SVG/BMP/ICO/AVIF references stream through a scoped read-only asset transport; UNC and remote `file:` shares are rejected. |
-| GitHub Alerts | `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, and `[!CAUTION]` blockquotes render as alert callouts. |
-| Highlights | `==highlight==` renders as marked text for notes and AI-generated docs. |
-| Dark mode | Follows the system color scheme across macOS, Windows, and Linux. |
-| GitHub-flavored Markdown | Tables, task lists, strikethrough, heading attributes, and anchors. |
-| External links | `http`, `https`, and `mailto` links open in the system browser or mail app. |
-| Window restore | Last size and position are restored when still visible on a connected monitor. |
-| Updates | After first paint, MD Preview checks desktop GitHub Releases. macOS uses Sparkle for signed in-app updates; Windows self-updates the single exe after SHA-256 verification; Linux opens the matching release download. |
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|---|---|
-| `Cmd/Ctrl + N` | Create a Markdown file and enter source edit |
-| `Cmd/Ctrl + O` | Open file |
-| `Cmd/Ctrl + F` | Find in preview |
-| `Ctrl + H` | Enter source mode and open find/replace |
-| `Cmd/Ctrl + E` | Toggle preview/source edit |
-| `Cmd/Ctrl + S` | Save in source edit mode |
-| `Cmd/Ctrl + P` | Print preview |
-| `Cmd/Ctrl + W` | Close the active tab; close the window when no document tab remains |
-| `Cmd/Ctrl +` | Zoom document content in |
-| `Cmd/Ctrl -` | Zoom document content out |
-| `Cmd/Ctrl 0` | Reset document content zoom |
-| `Esc` | Leave source edit mode and save if needed |
-| `Space + left mouse drag` | Pan a zoomed Mermaid diagram in the lightbox |
-
-## Markdown Support
-
-MD Preview uses `pulldown-cmark` for the base Markdown pass, then enhances the rendered document only when needed:
-
-- CommonMark plus GFM-style tables, task lists, strikethrough, and heading attributes
-- GitHub-style alert blockquotes for notes, tips, warnings, and cautions
-- `==highlight==` text marks used by many Markdown note tools
-- Offline code highlighting for 40+ languages, including Delphi/Pascal
-- Offline KaTeX math rendering with safeguards so Markdown emphasis does not break formulas
-- Offline Mermaid rendering for fenced ```` ```mermaid ```` blocks
-- Standard Markdown image references resolved from the opened document directory and streamed through a scoped read-only transport
-- Relative and absolute links to supported local Markdown or text documents
-- Readable YAML front matter delimited by `---` or `...`
-- Print CSS that removes app controls from printed output
-
-The cold path stays small: regular Markdown renders first, while heavier enhancers such as highlight.js, KaTeX, and Mermaid are deferred until after the first visible paint or loaded only for documents that need them.
-
-## How It Stays Small
-
-MD Preview is not a Tauri or Electron app. It uses:
-
-- **Rust** for the native shell and Markdown pipeline
-- **wry** for the system WebView: WebKit on macOS, WebView2 on Windows, WebKitGTK on Linux
-- **tao** for the cross-platform window/event loop
-- **pulldown-cmark** for Markdown parsing
-- **notify** for file watching
-- **rfd** for native open dialogs
-
-The release profile enables size-oriented optimization, LTO, one codegen unit, symbol stripping, and `panic = "abort"`.
-
-## Privacy
-
-MD Preview has no accounts, no telemetry, and no analytics. Your Markdown files stay on disk. Rendering happens locally. The only network request made by the desktop app itself is the optional update check after the first paint; failed checks are ignored and never block startup. macOS updates are verified by Sparkle using the app's embedded EdDSA public key. Windows self-updates verify the SHA-256 digest returned by GitHub Releases before replacing the running exe.
-
-## Troubleshooting
-
-**Linux does not launch**
-
-Install WebKitGTK 4.1 packages for your distribution. On Debian/Ubuntu:
-
-```bash
-sudo apt-get install libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev
-```
-
-**Linux opens a blank window on NVIDIA**
-
-MD Preview automatically applies a conservative WebKitGTK fallback on Linux systems with the NVIDIA driver loaded. If your distribution still shows a blank WebView, start it manually with:
-
-```bash
-WEBKIT_DISABLE_DMABUF_RENDERER=1 md-preview your-file.md
-```
-
-If that does not help, try:
-
-```bash
-WEBKIT_DISABLE_COMPOSITING_MODE=1 md-preview your-file.md
-```
-
-**Windows cannot set MD Preview as the default app automatically**
-
-Windows does not allow apps to silently take over file associations. MD Preview registers itself in the "Open with" list; choose it from Explorer or Windows Settings. Version 1.9.5 validates the registry command, removes unsupported Windows verbatim-path prefixes, and registers both the current executable name and a compatibility alias. If an older default points to a broken symlink or hard link, copy the EXE to a stable local directory, launch it once there, and select it again under "Open with".
-
-**A formula or diagram shows as text**
-
-Make sure the syntax is valid Markdown/KaTeX/Mermaid. Math and Mermaid are loaded on demand, so documents without those patterns do not pay the startup cost.
-
-## Development
-
-```bash
-cargo build
-cargo test
-cargo build --release
-```
-
-CI builds macOS, Windows, and Linux. Release tags matching `v*` produce a macOS DMG, standalone Windows EXE, and Linux tarball through GitHub Actions.
-
-Maintainer release flow:
-
-```bash
-scripts/release.sh v1.2.3
-```
-
-The script runs verification, pushes `master` and the tag, waits for GitHub Actions, signs/notarizes/staples the macOS DMG in the foreground, uploads `appcast.xml`, and verifies the final Release assets.
-
-## License
-
-[MIT](LICENSE)
+Vditor、Lute、KaTeX 等组件的许可证各自适用，详见 [第三方声明](assets/editor/THIRD-PARTY-NOTICES.md) 和相应许可正文。项目更新、下载和反馈入口指向本仓库。

@@ -2,8 +2,17 @@
 
 ## 项目目标
 
-- MD Preview 是本地优先 Markdown 预览器，核心场景是快速打开 AI 生成文档、README、计划文档和手机收到的 Markdown 文件。
+- Markdown Studio 是基于 vorojar/md-preview 的本地 Markdown 编辑、预览和导出工具；正式仓库为 `galen2027/md-studio`，保留上游 MIT 版权与来源署名。
 - 桌面端保持 Rust + 系统 WebView 的轻量路线；手机端 MVP 聚焦只读快速预览和系统文件打开入口。
+
+## 公开发布：v1.9.10（2026-11-19）
+
+- 当前正式交付 Windows x64 直接运行 EXE；其他平台的编译检查不等同原生验收，不发布或声明维护上游移动商店应用。
+- README.md 为中文主说明，README_en.md 为英文，README_zh.md 保留兼容入口；相关下载、支持、隐私和更新入口指向本仓库。
+- 程序显示名称 Markdown Studio；Cargo/EXE 兼容文件名、配置目录、文件关联和现有 CLI 参数保留。
+- Windows 打包唯一入口 `scripts/package-windows-release.ps1`，记录实际大小、SHA-256、签名和许可证，输出独立 EXE 与可选 ZIP。
+- 发布工作流仅手动生成 Windows 草稿，已公开版本不可覆盖；正式发布前核验资产及下载字节。原有 Mac 签名脚本是遗留维护工具，不纳入当前 Windows 发布承诺。
+- 验收：更新源/允许下载域路径使用本仓库并拒绝上游更新地址；中文/英文文档和静态页链接可达；EXE --help/--version、PE、原生编辑/图下载及公开下载 SHA-256 一致。
 
 ## 当前迭代：v1.9.9（2026-11-19）
 

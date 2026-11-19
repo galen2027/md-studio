@@ -1,290 +1,67 @@
-name: Release
+name: Windows Release Draft
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing version tag, for example v1.9.10'
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 jobs:
-  validate_release:
-    runs-on: ubuntu-latest
-    outputs:
-      deployment_doc_name: ${{ steps.release_metadata.outputs.deployment_doc_name }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Validate release metadata
-        id: release_metadata
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          tag_version="${GITHUB_REF_NAME#v}"
-          if [[ "$GITHUB_REF_NAME" != "v${tag_version}" || -z "$tag_version" ]]; then
-            echo "::error::Release tag must use the v<version> format; got '$GITHUB_REF_NAME'."
-            exit 1
-          fi
-
-          cargo_version="$(python3 -c 'import tomllib; print(tomllib.load(open("Cargo.toml", "rb"))["package"]["version"])')"
-          if [[ "$tag_version" != "$cargo_version" ]]; then
-            echo "::error::Release tag version '$tag_version' does not match Cargo.toml version '$cargo_version'."
-            exit 1
-          fi
-
-          shopt -s nullglob
-          deployment_docs=("docs/《MD Preview 发布部署方案》_v${cargo_version}_"*.md "docs/MD Preview 发布部署方案_v${cargo_version}_"*.md)
-          shopt -u nullglob
-          if (( ${#deployment_docs[@]} != 1 )) || [[ ! -f "${deployment_docs[0]:-}" ]]; then
-            echo "::error::Expected exactly one deployment document for v${cargo_version}; found ${#deployment_docs[@]}."
-            printf '  %s\n' "${deployment_docs[@]}" >&2
-            exit 1
-          fi
-
-          printf 'deployment_doc_name=%s\n' "$(basename "${deployment_docs[0]}")" >> "$GITHUB_OUTPUT"
-
-  build-macos:
-    needs: validate_release
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
-
-      - name: Build Universal Binary
-        run: |
-          cargo build --release --target aarch64-apple-darwin
-          cargo build --release --target x86_64-apple-darwin
-          lipo -create \
-            target/aarch64-apple-darwin/release/md-preview \
-            target/x86_64-apple-darwin/release/md-preview \
-            -output target/release/md-preview-universal
-
-      - name: Create .app bundle
-        run: |
-          chmod +x bundle.sh
-          bash bundle.sh
-
-      - name: Create DMG
-        run: |
-          brew install create-dmg
-          create-dmg \
-            --volname "MD Preview" \
-            --volicon "assets/icon.icns" \
-            --window-pos 200 120 \
-            --window-size 600 400 \
-            --icon-size 100 \
-            --icon "MD Preview.app" 150 185 \
-            --app-drop-link 450 185 \
-            --no-internet-enable \
-            "MD-Preview-macOS-universal.dmg" \
-            "target/MD Preview.app"
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-dmg
-          path: MD-Preview-macOS-universal.dmg
-
-  build-windows:
-    needs: validate_release
+  build-windows-draft:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
         with:
-          targets: x86_64-pc-windows-msvc
-
-      - name: Install WebView2
-        shell: pwsh
-        run: |
-          # WebView2 is pre-installed on Windows 10/11
-          # Just need to build
-          echo "WebView2 should be available on the runner"
-
-      - name: Build
-        run: cargo build --release --target x86_64-pc-windows-msvc
-
-      - name: Verify portable PE dependencies
-        shell: pwsh
-        run: |
-          ./scripts/verify-windows-pe-dependencies.ps1 -SelfTest
-          ./scripts/verify-windows-pe-dependencies.ps1 -Path target/x86_64-pc-windows-msvc/release/md-preview.exe
-
-      - name: Package Windows release assets
+          ref: ${{ inputs.tag }}
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Validate version and protect published releases
         shell: pwsh
         env:
-          DEPLOYMENT_DOC_NAME: ${{ needs.validate_release.outputs.deployment_doc_name }}
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
           $ErrorActionPreference = 'Stop'
-
-          $sourceExe = 'target/x86_64-pc-windows-msvc/release/md-preview.exe'
-          $deploymentDoc = Join-Path 'docs' $env:DEPLOYMENT_DOC_NAME
-          $assetDirectory = 'windows-release-assets'
-          $releaseExe = Join-Path $assetDirectory 'MD-Preview-windows-x64.exe'
-          $releaseDoc = Join-Path $assetDirectory (Split-Path -Leaf $deploymentDoc)
-
-          foreach ($requiredFile in @($sourceExe, $deploymentDoc)) {
-            if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
-              throw "Required release file not found: $requiredFile"
-            }
-          }
-
-          New-Item -ItemType Directory -Path $assetDirectory -Force | Out-Null
-          Copy-Item -LiteralPath $sourceExe -Destination $releaseExe
-          Copy-Item -LiteralPath $deploymentDoc -Destination $assetDirectory
-          Copy-Item -LiteralPath 'assets/editor/THIRD-PARTY-NOTICES.md' -Destination $assetDirectory
-          $licenseDirectory = Join-Path $assetDirectory 'licenses'
-          New-Item -ItemType Directory -Path $licenseDirectory -Force | Out-Null
-          Copy-Item -LiteralPath 'assets/editor/vditor/LICENSE' -Destination (Join-Path $licenseDirectory 'Vditor-MIT.txt')
-          Copy-Item -LiteralPath 'assets/editor/vditor/LUTE-LICENSE' -Destination (Join-Path $licenseDirectory 'Lute-MulanPSL-2.0.txt')
-          Copy-Item -LiteralPath 'assets/editor/vditor/KATEX-LICENSE' -Destination (Join-Path $licenseDirectory 'KaTeX-MIT.txt')
-          Copy-Item -LiteralPath 'LICENSE' -Destination (Join-Path $licenseDirectory 'MD-Preview-MIT.txt')
-
-          $sha256 = (Get-FileHash -LiteralPath $releaseExe -Algorithm SHA256).Hash.ToLowerInvariant()
-          $checksumLine = '{0}  {1}' -f $sha256, (Split-Path -Leaf $releaseExe)
-          Set-Content -LiteralPath "$releaseExe.sha256" -Value $checksumLine -Encoding ascii
-
-          $exeInfo = Get-Item -LiteralPath $releaseExe
-          $sizeBytes = $exeInfo.Length.ToString('N0', [Globalization.CultureInfo]::InvariantCulture)
-          $sizeMiB = ($exeInfo.Length / 1MB).ToString('F2', [Globalization.CultureInfo]::InvariantCulture)
-          $signatureStatus = (Get-AuthenticodeSignature -FilePath $releaseExe).Status.ToString()
-          $releaseDocContent = Get-Content -LiteralPath $releaseDoc -Raw -Encoding utf8
-          $releaseValues = @(
-            @{ Patterns = @('(?m)^- 文件大小：[^\r\n]*', '(?m)^\| 实际大小 \|[^\r\n]*'); Values = @('- 文件大小：`{0}` 字节（约 `{1} MiB`）' -f $sizeBytes, $sizeMiB; '| 实际大小 | {0} 字节 |' -f $sizeBytes) },
-            @{ Patterns = @('(?m)^- SHA-256：[^\r\n]*', '(?m)^\| SHA-256 \|[^\r\n]*'); Values = @('- SHA-256：`{0}`' -f $sha256; '| SHA-256 | {0} |' -f $sha256) },
-            @{ Patterns = @('(?m)^- Authenticode：[^\r\n]*', '(?m)^\| Authenticode \|[^\r\n]*'); Values = @('- Authenticode：`{0}`' -f $signatureStatus; '| Authenticode | {0} |' -f $signatureStatus) }
-          )
-
-          foreach ($field in $releaseValues) {
-            $matchCount = 0
-            for ($index = 0; $index -lt $field.Patterns.Count; $index++) {
-              $count = [regex]::Matches($releaseDocContent, $field.Patterns[$index]).Count
-              $matchCount += $count
-              if ($count -eq 1) {
-                $releaseDocContent = [regex]::Replace($releaseDocContent, $field.Patterns[$index], $field.Values[$index])
-              }
-            }
-            if ($matchCount -ne 1) {
-              throw "Expected one deployment document field, found $matchCount for $($field.Patterns -join ' or ')"
-            }
-          }
-
-          Set-Content -LiteralPath $releaseDoc -Value $releaseDocContent -Encoding utf8 -NoNewline
-          if ((Get-Content -LiteralPath $releaseDoc -Raw -Encoding utf8) -notmatch [regex]::Escape($sha256)) {
-            throw 'Deployment document SHA-256 does not match the packaged executable'
-          }
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+          $version = [regex]::Match((Get-Content Cargo.toml -Raw), '(?m)^version\s*=\s*"([^"]+)"').Groups[1].Value
+          if ($env:RELEASE_TAG -ne "v$version") { throw 'Tag and Cargo version differ.' }
+          $draft = gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json isDraft --jq .isDraft 2>$null
+          if ($LASTEXITCODE -eq 0 -and $draft -ne 'true') { throw 'Published releases are immutable. Choose a new version.' }
+      - name: Verify and build
+        shell: pwsh
+        run: |
+          cargo fmt --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo build --release --locked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Package verified Windows executable
+        shell: pwsh
+        run: ./scripts/package-windows-release.ps1 -OutputDirectory target/windows-release
+      - uses: actions/upload-artifact@v4
         with:
-          name: windows-release-assets
-          path: |
-            windows-release-assets/MD-Preview-windows-x64.exe
-            windows-release-assets/MD-Preview-windows-x64.exe.sha256
-            windows-release-assets/${{ needs.validate_release.outputs.deployment_doc_name }}
-            windows-release-assets/THIRD-PARTY-NOTICES.md
-            windows-release-assets/licenses/*.txt
+          name: md-studio-windows-release
+          path: target/windows-release/
           if-no-files-found: error
-
-  build-linux:
-    needs: validate_release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Build
-        run: cargo build --release
-
-      - name: Package
-        run: |
-          mkdir -p dist
-          cp target/release/md-preview dist/
-          tar czf MD-Preview-linux-x64.tar.gz -C dist .
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-tar
-          path: MD-Preview-linux-x64.tar.gz
-
-  publish-release:
-    needs: [validate_release, build-macos, build-windows, build-linux]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-
-      - name: Extract release notes
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="${GITHUB_REF_NAME#v}"
-          awk -v expected_version="$version" '
-            function heading_version(line, fields, candidate) {
-              sub(/\r$/, "", line)
-              if (line !~ /^##[[:space:]]+/) {
-                return ""
-              }
-              sub(/^##[[:space:]]+/, "", line)
-              split(line, fields, /[[:space:]]+/)
-              candidate = fields[1]
-              sub(/^\[/, "", candidate)
-              sub(/\]$/, "", candidate)
-              sub(/^[vV]/, "", candidate)
-              return candidate
-            }
-            heading_version($0) == expected_version {
-              in_section = 1
-              next
-            }
-            in_section && /^##[[:space:]]+/ {
-              exit
-            }
-            in_section {
-              print
-            }
-          ' CHANGELOG.md | sed '/./,$!d' > RELEASE_NOTES.md
-
-          if [ ! -s RELEASE_NOTES.md ]; then
-            printf 'See full changelog: https://github.com/%s/releases/tag/%s\n' \
-              "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" > RELEASE_NOTES.md
-          fi
-
-      - name: Create Release
+      - name: Create draft for maintainer review
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            MD-Preview-macOS-universal.dmg
-            MD-Preview-windows-x64.exe
-            MD-Preview-windows-x64.exe.sha256
-            ${{ needs.validate_release.outputs.deployment_doc_name }}
-            THIRD-PARTY-NOTICES.md
-            licenses/*.txt
-            MD-Preview-linux-x64.tar.gz
+          tag_name: ${{ inputs.tag }}
+          draft: true
+          overwrite_files: false
           fail_on_unmatched_files: true
-          body_path: RELEASE_NOTES.md
+          body: |
+            Windows x64 build draft. Verify the executable, checksums and deployment guide before publishing.
+            This workflow does not publish macOS, Linux or mobile packages.
+          files: |
+            target/windows-release/MD-Preview-windows-x64.exe
+            target/windows-release/MD-Preview-windows-x64.exe.sha256
+            target/windows-release/MD-Studio-*-windows-x64.zip
+            target/windows-release/MD-Studio-*-windows-x64.zip.sha256
+            target/windows-release/MD-Studio-Deployment-*-zh.md
+            target/windows-release/MD-Studio-*-licenses.zip
+            target/windows-release/MD-Studio-*-licenses.zip.sha256

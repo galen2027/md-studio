@@ -19,7 +19,7 @@ VERSION="${TAG#v}"
 SPARKLE_DIR="$("$ROOT/scripts/fetch-sparkle.sh")"
 SIGN_UPDATE="$SPARKLE_DIR/bin/sign_update"
 ASSET_NAME="$(basename "$DMG")"
-DOWNLOAD_URL="https://github.com/vorojar/md-preview/releases/download/$TAG/$ASSET_NAME"
+DOWNLOAD_URL="https://github.com/galen2027/md-studio/releases/download/$TAG/$ASSET_NAME"
 SIGNATURE_ATTRS="$("$SIGN_UPDATE" "$DMG")"
 PUB_DATE="$(LC_ALL=C date -u '+%a, %d %b %Y %H:%M:%S +0000')"
 
@@ -29,7 +29,7 @@ cat > "$OUT" <<XML
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>
     <title>MD Preview Updates</title>
-    <link>https://github.com/vorojar/md-preview/releases</link>
+    <link>https://github.com/galen2027/md-studio/releases</link>
     <description>Updates for MD Preview.</description>
     <item>
       <title>MD Preview $VERSION</title>

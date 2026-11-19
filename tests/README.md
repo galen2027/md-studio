@@ -1,6 +1,6 @@
 # 全量测试索引
 
-版本：v1.3；更新时间：2026-11-19；适用 MD Preview v1.9.9。覆盖结构化文字、流程图编辑、语义分栏及版本归档。
+版本：v1.4；更新时间：2026-11-19；适用 Markdown Studio v1.9.10。覆盖结构化文字、流程图编辑、语义分栏及公开 Windows 发布。
 
 ## 环境与执行
 
@@ -25,9 +25,12 @@
 | 图片原生加载 | scripts/verify-webview-local-images.mjs | 指定 CDP endpoint 和期望图片数时检查旧只读预览传输；本次由 TC-RICH-03 额外验证编辑模式实际图片加载 |
 | 更新发布契约 | scripts/verify-sparkle-update.sh / verify-windows-self-update.sh | 更新脚本、签名/下载校验接口 |
 | 便携依赖 | scripts/verify-windows-pe-dependencies.ps1 | PE 不导入 VC Runtime |
+| 公开发布 | scripts/package-windows-release.ps1 / scripts/verify.sh | EXE 版本、大小、SHA-256、签名记录、许可证；中文/英文 README 及静态说明的本地链接、版本及本仓库下载入口 |
 | 移动共享渲染 | mobile/scripts/verify-mobile-renderer.mjs | 只读渲染不回归；原生构建需要对应平台工具 |
 
 关键路径：立即标记脏状态；保存/标签/关闭/确认/外部变化判断前同步 DOM；备份成功才进入；图片协议 URL 不落盘；搜索不改编辑 DOM、不退出编辑模式。旧 src/preview_edit.rs 定位筛选模块已移除，原 TC-EDIT-01..05 被上述结构化用例替代。
+
+v1.9.10 的更新地址测试允许本仓库 Release 资产，明确拒绝上游和其他仓库的下载地址。公开后需匿名重新下载 EXE，并与发布包 SHA-256、大小比较；该网络验收不在离线 verify.sh 中执行。Windows 工作流只创建草稿，正式发布与公开下载验收由维护者完成。
 
 ## Rust 完整清单
 
@@ -134,7 +137,9 @@
 
 ## 最近执行结果
 
-Git 归档前检查：从当前 CI 文件提取真实校验/打包脚本，在本地临时目录验证 v1.9.9 部署文档查找、错误 tag 版本拒绝、表格/旧项目符号两种元数据更新及四份许可证复制；检查通过。Windows 验证使用现有 Python 3.12.13 对应 CI 声明的 Python 3.12。未执行远程 push 或公开发布。累计更新中文摘要及源码/发布物归档规则见 `release/README.md`。
+v1.9.10（2026-11-19）：Rust 98/0，fmt、release 构建、统一门禁、PE 与 CLI 通过；本仓库更新地址和拒绝上游下载的契约通过。隔离 WebView2 原生工作流与结构化 fixture 回归通过，含冲突保护、语义分栏、节点编辑/删除/撤销、图片连续保存、SVG 314px / PNG 942px 下载。打包脚本实跑通过，ZIP 完整性、EXE 字节一致、四份许可证及全部 SHA-256 已核验。真实截图使用合成示例，不含业务文档。公开下载验收在正式发布后执行。
+
+历史 v1.9.9 Git 归档前检查：从当时 CI 文件提取真实校验/打包脚本，在本地临时目录验证部署文档查找、错误 tag 版本拒绝、表格/旧项目符号两种元数据更新及四份许可证复制；检查通过。当时尚未执行远程 push 或公开发布。归档规则见 `release/README.md`。
 
 v1.9.9：Rust 98/0，统一门禁、发布构建、PE 与 CLI 通过。新增原生工作流覆盖真正冲突/同内容通知、分栏双向精确锚点和 Ctrl+H、390px 与打印布局，节点点选/编辑/删除/撤销及富文本回写通过。两份真实方案共6张抽样流程图，6次标签修改及6次节点删除校验通过。测试证据在 target/preview-workflows-*，不随程序发布。
 

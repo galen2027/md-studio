@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-APP_NAME="MD Preview"
+APP_NAME="Markdown Studio"
 BUNDLE_ID="com.mdpreview.app"
 MD_UTI="net.daringfireball.markdown"
 BIN="target/release/md-preview"
 APP_DIR="target/${APP_NAME}.app"
 APP_VERSION="$(awk -F\" '/^version = / { print $2; exit }' Cargo.toml)"
 SPARKLE_PUBLIC_KEY="fstkwGnjUNSrHFW4oq3LpBMQ1dhh9lQtax5K7nI0uoQ="
-SPARKLE_FEED_URL="https://github.com/vorojar/md-preview/releases/latest/download/appcast.xml"
+SPARKLE_FEED_URL="https://github.com/galen2027/md-studio/releases/latest/download/appcast.xml"
 
 echo "Building release (arm64 + x86_64)..."
 cargo build --release --target aarch64-apple-darwin

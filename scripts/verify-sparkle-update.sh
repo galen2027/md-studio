@@ -11,7 +11,7 @@ fi
 
 ./bundle.sh
 
-APP="target/MD Preview.app"
+APP="target/Markdown Studio.app"
 PLIST="$APP/Contents/Info.plist"
 FRAMEWORK="$APP/Contents/Frameworks/Sparkle.framework"
 
@@ -21,7 +21,7 @@ test -x "$FRAMEWORK/Sparkle"
 test -x "$FRAMEWORK/Autoupdate"
 test -d "$FRAMEWORK/Updater.app"
 
-/usr/libexec/PlistBuddy -c 'Print :SUFeedURL' "$PLIST" | grep -qx 'https://github.com/vorojar/md-preview/releases/latest/download/appcast.xml'
+/usr/libexec/PlistBuddy -c 'Print :SUFeedURL' "$PLIST" | grep -qx 'https://github.com/galen2027/md-studio/releases/latest/download/appcast.xml'
 /usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$PLIST" | grep -qx 'fstkwGnjUNSrHFW4oq3LpBMQ1dhh9lQtax5K7nI0uoQ='
 /usr/libexec/PlistBuddy -c 'Print :SUEnableAutomaticChecks' "$PLIST" | grep -qx 'true'
 /usr/libexec/PlistBuddy -c 'Print :SUEnableInstallerLauncherService' "$PLIST" | grep -qx 'true'
@@ -61,14 +61,14 @@ window.__mdPreviewInstallUpdateCheck({
 });
 window.__mdPreviewApplyUpdateRelease({
   tag_name: 'v1.1.16',
-  html_url: 'https://github.com/vorojar/md-preview/releases/tag/v1.1.16',
+  html_url: 'https://github.com/galen2027/md-studio/releases/tag/v1.1.16',
   assets: [{
     name: 'MD-Preview-macOS-universal.dmg',
-    browser_download_url: 'https://github.com/vorojar/md-preview/releases/download/v1.1.16/MD-Preview-macOS-universal.dmg'
+    browser_download_url: 'https://github.com/galen2027/md-studio/releases/download/v1.1.16/MD-Preview-macOS-universal.dmg'
   }]
 });
 button.click();
-const expected = 'open-url:https://github.com/vorojar/md-preview/releases/download/v1.1.16/MD-Preview-macOS-universal.dmg';
+const expected = 'open-url:https://github.com/galen2027/md-studio/releases/download/v1.1.16/MD-Preview-macOS-universal.dmg';
 if (window.sent !== expected) {
   throw new Error(`unexpected macOS update IPC: ${window.sent}`);
 }
